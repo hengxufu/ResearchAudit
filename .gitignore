@@ -4,3 +4,7 @@ frontend/dist/
 .researchaudit/
 __pycache__/
 .pytest_cache/
+.test-runs-*/
+frontend/test-results/
+frontend/playwright-report/
+output/pdf/TEST_DATA-*

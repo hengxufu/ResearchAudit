@@ -15,9 +15,24 @@ async def lifespan(app):
     jobs.recover()
     app.state.tracker=tracking_engine()
     app.state.tracker.start()
+    app.state.orchestrator=execution_engine()
+    app.state.orchestrator.start()
     try: yield
-    finally: app.state.tracker.stop()
-app=FastAPI(lifespan=lifespan,title="ResearchAudit",version="0.1.0")
+    finally:
+        app.state.orchestrator.stop()
+        app.state.tracker.stop()
+app=FastAPI(lifespan=lifespan,title="ResearchAudit",version="2.0.0-dev.0")
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+app.add_middleware(TrustedHostMiddleware,allowed_hosts=['127.0.0.1','localhost','[::1]','testserver'])
+@app.middleware('http')
+async def local_origin_boundary(request,call_next):
+    from urllib.parse import urlparse
+    from fastapi.responses import JSONResponse
+    origin=request.headers.get('origin')
+    if request.method in ('POST','PUT','PATCH','DELETE') and origin:
+        if urlparse(origin).hostname not in ('127.0.0.1','localhost','::1'):
+            return JSONResponse({'detail':'Local browser origin required'},status_code=403)
+    return await call_next(request)
 class ImportRequest(BaseModel):
     path: str
 @app.get("/api/projects")
@@ -210,4 +225,104 @@ def reconcile_tracking():
     return tracking_engine().diagnostics()
 @app.get("/api/tracking/runs/{run_id}/metrics")
 def tracking_metrics(run_id:str):return tracking_engine().observations(run_id)
+from .orchestrator import Orchestrator
+_executor=None
+def execution_engine():
+    global _executor
+    target=(storage.DB/'execution').resolve()
+    if _executor is None or _executor.home!=target:_executor=Orchestrator(target)
+    return _executor
+class ExecutionSpec(BaseModel):
+    model_config=ConfigDict(extra="forbid",allow_inf_nan=False)
+    argv:List[str]=Field(min_length=1,max_length=100)
+    cwd:str
+    env:dict[str,str]=Field(default_factory=dict)
+    params:dict=Field(default_factory=dict)
+    dependencies:List[str]=Field(default_factory=list,max_length=50)
+    priority:int=Field(default=0,ge=-100,le=100)
+    timeout_seconds:float=Field(default=3600,gt=0,le=604800)
+    soft_memory_mb:Optional[float]=Field(default=None,gt=0,le=1048576)
+    log_limit_mb:float=Field(default=100,gt=0,le=10240)
+@app.post("/api/executions",status_code=201)
+def create_execution(spec:ExecutionSpec):
+    try:return execution_engine().create(spec.model_dump())
+    except (ValueError,KeyError) as e:raise HTTPException(422,str(e))
+@app.get("/api/executions")
+def executions(limit:int=100,offset:int=0):
+    if not 1<=limit<=500 or offset<0:raise HTTPException(422,"Invalid pagination")
+    return execution_engine().listing(limit,offset)
+@app.get("/api/executions/{id}")
+def execution(id:str):
+    try:return execution_engine().get(id)
+    except KeyError:raise HTTPException(404,"Execution not found")
+@app.post("/api/executions/{id}/{action}")
+def execution_action(id:str,action:Literal["start","cancel","rerun","pause"]):
+    try:
+        engine=execution_engine()
+        if action=='pause':raise HTTPException(409,"Pause is not supported by this executor")
+        if action=='start':
+            folder=Path(engine.get(id)['output_dir']);folder.mkdir(parents=True,exist_ok=True)
+            tracking_engine().register(folder)
+            return engine.enqueue(id)
+        if action=='cancel':return engine.cancel(id)
+        return engine.create(engine.get(id)['spec'])
+    except KeyError:raise HTTPException(404,"Execution not found")
+    except ValueError as e:raise HTTPException(409,str(e))
+@app.get("/api/executions/{id}/logs")
+def execution_logs(id:str,stream:Literal["stdout","stderr"]="stdout",offset:int=0,limit:int=65536):
+    if offset<0 or not 1<=limit<=1048576:raise HTTPException(422,"Invalid log bounds")
+    try:return execution_engine().logs(id,stream,offset,limit)
+    except KeyError:raise HTTPException(404,"Execution not found")
+from . import statistics_engine
+class AnalysisRef(BaseModel):
+    snapshot_id:int
+    run_id:str
+    metric:str
+class PairedAnalysis(BaseModel):
+    left:List[AnalysisRef]=Field(min_length=3,max_length=1000)
+    right:List[AnalysisRef]=Field(min_length=3,max_length=1000)
+    independent_pairs:bool=False
+    normal_differences:bool=False
+    bootstrap_seed:int=0
+@app.post("/api/analyses/describe")
+def describe_analysis(ref:AnalysisRef):
+    try:return statistics_engine.describe(ref.model_dump())
+    except (KeyError,ValueError) as e:raise HTTPException(422,str(e))
+@app.post("/api/analyses/paired")
+def paired_analysis(request:PairedAnalysis):
+    try:return statistics_engine.paired([r.model_dump() for r in request.left],[r.model_dump() for r in request.right],request.independent_pairs,request.normal_differences,request.bootstrap_seed)
+    except (KeyError,ValueError) as e:raise HTTPException(422,str(e))
+@app.get("/api/analyses/{id}")
+def analysis_record(id:str):
+    try:return statistics_engine.get(id)
+    except KeyError:raise HTTPException(404,"Analysis not found")
+@app.get("/api/projects/{id}/package")
+def evidence_package(id:int):
+    from .packages import bundle
+    snapshot(id)
+    return Response(bundle(id),media_type="application/zip",headers={"Content-Disposition":f'attachment; filename="researchaudit-{id}.zip"'})
+@app.get("/api/projects/{id}/report-export")
+def report_export(id:int,format:Literal["html","json"]="html"):
+    import html
+    s=snapshot(id)
+    if format=='json':return {"snapshot":s,"audit":audit(s),"figures":storage.figures(id)}
+    from .reports import render
+    content=html.escape(render(s,id,storage.figures(id)))
+    return Response('<!doctype html><meta charset="utf-8"><title>ResearchAudit report</title><style>body{max-width:1000px;margin:40px auto;font:14px system-ui}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><h1>ResearchAudit evidence report</h1><pre>'+content+'</pre>',media_type="text/html")
+class GridExecution(BaseModel):
+    spec:ExecutionSpec
+    grid:dict[str,List[Union[str,int,float]]]
+@app.post("/api/execution-grid",status_code=201)
+def execution_grid(request:GridExecution):
+    import itertools,math
+    if not request.grid or any(not v for v in request.grid.values()) or math.prod(len(v) for v in request.grid.values())>100:raise HTTPException(422,"Grid must contain 1..100 combinations")
+    keys=list(request.grid);created=[]
+    for values in itertools.product(*(request.grid[k] for k in keys)):
+        spec=request.spec.model_dump();parameters=dict(zip(keys,values));spec['params'].update(parameters)
+        for key,value in parameters.items():spec['argv']=[arg.replace('{'+key+'}',str(value)) for arg in spec['argv']]
+        try:created.append(execution_engine().create(spec))
+        except (ValueError,KeyError) as e:raise HTTPException(422,str(e))
+    return {"runs":created,"state":"Pending","note":"Explicit start required for every generated run"}
+from .v2.router import router as v2_router
+app.include_router(v2_router)
 if Path("frontend/dist").exists(): app.mount("/",StaticFiles(directory="frontend/dist",html=True),name="ui")

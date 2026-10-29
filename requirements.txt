@@ -11,3 +11,6 @@ tensorboard>=2.15
 PyYAML>=6
 matplotlib>=3.7,<3.10
 watchfiles>=0.21
+psutil>=5.9
+h5py>=3.8
+reportlab>=4,<5

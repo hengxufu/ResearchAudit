@@ -14,3 +14,9 @@ Latest verification: 11 passed in 6.42s, including real-format TensorBoard/MLflo
 Historical registry update: 13 tests passed in 6.21s. Added revision persistence, stale-update conflict rejection, exact filters, snapshot linkage, report curation section and immutable-facts tests. 14 existing Matplotlib/Pyparsing warnings remain.
 
 Background import increment: 16 tests passed in 6.55s. Includes success, queued/running cancellation without snapshots, restart interruption, failure persistence and API error statuses. Frontend production build passes. Browser interactions remain unverified.
+
+Lifecycle upgrade verification: full suite 28 passed in 15.14s; subsequent execution metadata change passed four orchestrator tests in 6.14s. 14 pre-existing Matplotlib/Pyparsing warnings remain. Frontend TypeScript/Vite build passed (36 modules); large Plotly chunk warning remains. A browser-assisted run confirmed explicit Start, exit 0, stdout, live metric ingestion, result/audit opening and actual descriptive statistics. This is not an automated browser regression suite. Scale benchmark: benchmarks/lifecycle_result.json (1000 runs, 100000 observations, three real subprocess tasks). See docs/lifecycle_upgrade.md for limits and uncompleted stages.
+
+## 2.0 verification (supersedes earlier counts)
+
+Final suite: 55 passed in 26.64s, with 14 existing Matplotlib/Pyparsing deprecation warnings. Edge Playwright: 1 passed in 10.6s, including all nine pages, explicit command execution, source-backed results, audit, PDF and ZIP offline verification. TypeScript/Vite 8.3.5 build passes; lazy Plotly chunk warning remains. npm audit: zero reported vulnerabilities at verification time. Cross-platform CI is supplied but not claimed executed. Full scope and measured benchmark conditions are recorded in docs/v2_acceptance.md and benchmarks/v2_result.json.

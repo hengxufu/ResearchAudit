@@ -1,14 +1,224 @@
-import {TrackingPanel} from './TrackingPanel';
-import {HistoryPanel} from './HistoryPanel';
-import React,{useState,useEffect,useRef} from 'react';import{createRoot}from'react-dom/client';import Plotly from 'plotly.js-dist-min';import './style.css';
-async function api(path:string,options?:RequestInit){const r=await fetch('/api'+path,options);if(!r.ok)throw Error(await r.text());return r.json()}
-function App(){const[en,L]=useState(false),[path,P]=useState(''),[list,S]=useState<any[]>([]),[data,D]=useState<any>(null),[id,I]=useState<number>(),[metric,M]=useState(''),[audit,A]=useState<any[]>([]),[error,E]=useState(''),[busy,B]=useState(false);const [smooth,SM]=useState(false),[filter,F]=useState(''),[summary,SU]=useState<any>(null);const [job,J]=useState<any>(null);const plot=useRef<HTMLDivElement>(null);const t=(a:string,b:string)=>en?b:a;
-useEffect(()=>{api('/projects').then(S).catch(e=>E(String(e)))},[]);
-async function open(n:number){try{const d=await api('/projects/'+n);D(d);I(n);M([...new Set(d.runs.flatMap((r:any)=>Object.keys(r.metrics)))][0] as string||'');A(await api('/projects/'+n+'/audit'))}catch(e){E(String(e))}}
-async function ingest(){B(true);E('');try{J(await api('/import-jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path})}))}catch(e){E(String(e));B(false)}}
-useEffect(()=>{if(!job)return;if(['completed','failed','cancelled','interrupted'].includes(job.status)){B(false);return;}let active=true;const timer=setInterval(async()=>{try{const next=await api('/import-jobs/'+job.id);if(!active)return;J(next);if(['completed','failed','cancelled','interrupted'].includes(next.status)){B(false);if(next.status==='completed'){S(await api('/projects'));await open(next.snapshot_id)}else if(next.error)E(next.error)}}catch(e){if(active){E(String(e));B(false)}}},700);return()=>{active=false;clearInterval(timer)}},[job?.id,job?.status]);
-useEffect(()=>{if(id&&metric)api('/projects/'+id+'/compare?metric='+encodeURIComponent(metric)).then(SU).catch(e=>E(String(e)))},[id,metric]);
-useEffect(()=>{if(!data||!plot.current)return;Plotly.react(plot.current,data.runs.filter((r:any)=>r.series[metric]&&JSON.stringify(r.params).toLowerCase().includes(filter.toLowerCase())).map((r:any)=>({name:r.name,y:smooth?r.series[metric].map((v:number|null,i:number,a:(number|null)[])=>{const w=a.slice(Math.max(0,i-4),i+1);return w.some(v=>v===null)?null:w.reduce<number>((a,b)=>a+(b??0),0)/w.length}):r.series[metric],x:r.series[metric+'/step'],type:'scatter',mode:'lines+markers',connectgaps:false})),{margin:{t:25},paper_bgcolor:'white',xaxis:{title:'Observation / step'},yaxis:{title:metric},legend:{orientation:'h'}},{responsive:true,displaylogo:false});},[data,metric,smooth,filter]);
-const metrics:string[]=data?[...new Set<string>(data.runs.flatMap((r:any)=>Object.keys(r.metrics)))]:[];
-return <div className="flex min-h-screen"><aside className="w-64 bg-slate-900 text-slate-200 p-6 shrink-0"><h1 className="text-xl font-bold text-white">◈ ResearchAudit</h1><p className="text-xs mt-2 text-slate-400">科研实验管家 · V0.1</p><p className="mt-12 mb-4 text-xs uppercase">{t('项目快照','PROJECT SNAPSHOTS')}</p>{list.map(s=><button className="block w-full text-left mb-2 bg-slate-800 border-slate-700 text-xs overflow-hidden" key={s.id} onClick={()=>open(s.id)}>#{s.id} {s.root}<br/>{s.created}</button>)}</aside><main className="p-8 flex-1 min-w-0"><header className="flex justify-between mb-8"><div><p className="text-teal-700 text-xs font-bold tracking-widest">RESEARCH WORKSPACE</p><h2 className="text-3xl mt-2 font-semibold">{t('实验总览与证据审计','Experiments & evidence')}</h2></div><button onClick={()=>L(!en)}>中文 / EN</button></header><section><h3 className="font-bold mb-3">{t('导入本地科研项目','Import local project')}</h3><div className="flex gap-3"><input className="flex-1" value={path} onChange={e=>P(e.target.value)} placeholder="D:\research\experiment-project"/><button className="bg-teal-700 text-white" disabled={busy||!path} onClick={ingest}>{busy?t('扫描中…','Scanning…'):t('扫描并创建快照','Scan & snapshot')}</button></div><p className="text-xs text-slate-500 mt-3">CSV · JSON · Parquet · TensorBoard · MLflow · SHA-256 · Git</p></section>{job&&<section aria-live="polite"><strong>{t('导入任务','Import task')} · {job.status}</strong><p className="text-xs my-2">{job.current_file}</p><progress className="w-full" max={job.total||1} value={job.processed}/><p>{job.processed} / {job.total||'discovering'}</p>{['queued','running','cancelling'].includes(job.status)&&<button disabled={job.status==='cancelling'} onClick={()=>api('/import-jobs/'+job.id+'/cancel',{method:'POST'}).then(J).catch(e=>E(String(e)))}>{t('取消导入','Cancel import')}</button>}</section>}<TrackingPanel/><HistoryPanel en={en} onOpen={open}/>{error&&<p role="alert" className="text-red-700 p-4">{error}</p>}{data?<><div className="grid grid-cols-3 gap-5">{[[t('实验目录','Run directories'),data.runs.length],[t('证据文件','Evidence files'),data.evidence.length],[t('审计提示','Audit findings'),audit.length]].map(([k,v])=><section key={k}><p className="text-slate-500 text-sm">{k}</p><p className="text-3xl mt-2 font-bold">{v}</p></section>)}</div><section><div className="flex justify-between"><h3 className="font-bold">{t('指标比较与训练曲线','Metrics & training curves')}</h3><select value={metric} onChange={e=>M(e.target.value)}>{metrics.map(m=><option key={m}>{m}</option>)}</select></div><p className="text-xs text-slate-500 mt-3">{data.metric_policy}</p><div className="flex gap-3 mt-4"><input aria-label="Parameter filter" placeholder="Filter parameters / 参数筛选" value={filter} onChange={e=>F(e.target.value)}/><button onClick={()=>SM(!smooth)}>{smooth?'Raw / 原始曲线':'Smooth / 显示平滑 (5 observations)'}</button><button onClick={()=>plot.current&&Plotly.downloadImage(plot.current,{format:'svg',filename:'researchaudit-'+id+'-'+metric})}>SVG ↓</button></div>{summary&&<div className="my-3 text-sm"><strong>Compatibility: {summary.compatibility.status}</strong><p>Missing: {summary.compatibility.missing.join(', ')||'—'}</p><p>Different: {summary.compatibility.differences.join(', ')||'—'}</p><p>Final / Best: {summary.values.map((v:any)=>v.run+': '+(v.value??'missing')+' / '+(v.best??'unknown')).join('; ')}</p>{summary.seed_groups.map((g:any,i:number)=><p key={i}>Seeds {JSON.stringify(g.seeds)} · n={g.n} · mean={g.mean??'unknown'} · SD={g.std??'unknown'} · {g.status}</p>)}</div>}<div className="flex gap-3 my-3">{['pdf','svg','png'].map(format=><a key={format} className="text-teal-700" href={'/api/projects/'+id+'/figure?metric='+encodeURIComponent(metric)+'&format='+format}>Curve {format.toUpperCase()} ↓</a>)}<a className="text-teal-700" href={'/api/projects/'+id+'/figure?metric='+encodeURIComponent(metric)+'&kind=distribution&format=pdf'}>Distribution PDF ↓</a><a className="text-teal-700" href={'/api/projects/'+id+'/graph'}>Evidence graph JSON ↓</a></div><div ref={plot} style={{height:340}}/><table className="w-full"><thead><tr><th>Run</th><th>{metric}</th><th>Parameters</th></tr></thead><tbody>{data.runs.map((r:any)=><tr key={r.name}><td>{r.name}</td><td>{r.metrics[metric]??'—'}</td><td className="text-xs">{JSON.stringify(r.params)}</td></tr>)}</tbody></table></section><section><h3 className="font-bold mb-4">{t('审计与可复现性','Audit & reproducibility')}</h3>{audit.map((a,i)=><p className="border-l-2 border-amber-400 pl-3 mb-3 text-sm" key={i}>{a.status} · {a.rule} · {a.run||a.file} {a.message}<br/>{a.suggestion}</p>)}</section><section><div className="flex justify-between"><h3 className="font-bold">{t('证据链','Evidence provenance')}</h3><a className="text-teal-700" href={'/api/projects/'+id+'/report'}>{t('导出报告 ↓','Export report ↓')}</a></div><p className="my-3 text-xs">Git: {data.git.commit||'Unavailable'}</p><div className="overflow-auto max-h-72"><table className="text-xs w-full"><tbody>{data.evidence.map((e:any)=><tr key={e.path}><td>{e.path}</td><td>{e.bytes} B</td><td className="font-mono">{e.sha256}</td></tr>)}</tbody></table></div></section></>:<section className="py-20 text-center text-slate-500">{t('导入项目开始建立可追溯的实验记录','Import a project to build traceable experiment records')}</section>}</main></div>}
-createRoot(document.getElementById('root')!).render(<App/>);
+import { GlobalSearch } from "./pages/GlobalSearch";
+import { InferencePanel } from "./pages/InferencePanel";
+import { RegistryPanel } from "./pages/RegistryPanel";
+import React, { useEffect, useState, useRef } from "react";
+import { createRoot } from "react-dom/client";
+import { ExecutionPanel } from "./ExecutionPanel";
+import { HistoryPanel } from "./HistoryPanel";
+import { AnalysisPanel } from "./AnalysisPanel";
+import { api, post, Json } from "./pages/shared";
+import "./style.css";
+import { Dashboard } from "./pages/Dashboard";
+import { Assets } from "./pages/Assets";
+import { Importer } from "./pages/Importer";
+import { FigureStudio } from "./pages/FigureStudio";
+import { GraphPanel } from "./pages/GraphPanel";
+import { AuditPanel } from "./pages/AuditPanel";
+import { PluginPanel } from "./pages/PluginPanel";
+import { BatchPanel } from "./pages/BatchPanel";
+const pages = [
+  ["dashboard", "项目总览", "Dashboard"],
+  ["projects", "项目与数据资产", "Project Explorer"],
+  ["executions", "实验执行中心", "Experiment Center"],
+  ["runs", "实验记录", "Run Explorer"],
+  ["analysis", "科研分析", "Analysis Studio"],
+  ["figures", "科研绘图", "Figure Studio"],
+  ["provenance", "证据图谱", "Provenance Explorer"],
+  ["audit", "科研审计", "Audit Center"],
+  ["reports", "报告与成果", "Report Center"],
+];
+function App() {
+  const [page, P] = useState("dashboard"),
+    [en, L] = useState(false),
+    [theme, T] = useState(localStorage.getItem("ra-theme") || "light"),
+    [snapshots, S] = useState<any[]>([]),
+    [id, I] = useState<number | null>(null),
+    [snapshot, D] = useState<any>(null),
+    [query, Q] = useState(""),
+    [error, E] = useState("");
+  const name = pages.find((p) => p[0] === page)!;
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("ra-theme", theme);
+  }, [theme]);
+  async function refresh() {
+    try {
+      S(await api("/projects"));
+    } catch (e) {
+      E(String(e));
+    }
+  }
+  useEffect(() => {
+    refresh();
+  }, []);
+  const contextRequest = useRef(0);
+  async function open(n: number) {
+    try {
+      const request = ++contextRequest.current;
+      const result = await api("/projects/" + n);
+      if (request !== contextRequest.current) return;
+      D(result);
+      I(n);
+      await refresh();
+    } catch (e) {
+      E(String(e));
+    }
+  }
+  const needs = [
+    "analysis",
+    "figures",
+    "provenance",
+    "audit",
+    "reports",
+  ].includes(page);
+  return (
+    <div className="workbench">
+      <aside className="navigation">
+        <div className="brand">
+          ◈ ResearchAudit <small>2.0 development</small>
+        </div>
+        <input
+          aria-label="Global navigation search"
+          placeholder={en ? "Search pages" : "搜索功能页面"}
+          value={query}
+          onChange={(e) => Q(e.target.value)}
+        />
+        <GlobalSearch
+          query={query}
+          onOpen={(n) => {
+            open(n);
+            P("analysis");
+          }}
+        />
+        <nav>
+          {pages
+            .filter((p) =>
+              p.join(" ").toLowerCase().includes(query.toLowerCase()),
+            )
+            .map((p) => (
+              <button
+                key={p[0]}
+                className={page === p[0] ? "active" : ""}
+                onClick={() => P(p[0])}
+              >
+                {en ? p[2] : p[1]}
+              </button>
+            ))}
+        </nav>
+        <p className="local-note">LOCAL FIRST · EVIDENCE BASED</p>
+      </aside>
+      <main className="workspace">
+        <header className="toolbar">
+          <div>
+            <p className="eyebrow">RESEARCH WORKSPACE</p>
+            <h1>{en ? name[2] : name[1]}</h1>
+          </div>
+          <div className="controls">
+            <button onClick={() => L(!en)}>中文 / EN</button>
+            <button onClick={() => T(theme === "light" ? "dark" : "light")}>
+              {theme === "light" ? "Dark / 深色" : "Light / 浅色"}
+            </button>
+          </div>
+        </header>
+        <section className="context">
+          <label>
+            Snapshot / 实验上下文{" "}
+            <select
+              aria-label="Snapshot context"
+              value={id ?? ""}
+              onChange={(e) => e.target.value && open(Number(e.target.value))}
+            >
+              <option value="">Select imported snapshot</option>
+              {snapshots.map((s) => (
+                <option key={s.id} value={s.id}>
+                  #{s.id} · {s.root}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button onClick={refresh}>Refresh</button>
+        </section>
+        {error && <p role="alert">{error}</p>}
+        {page === "dashboard" && <Dashboard />}
+        {page === "projects" && (
+          <>
+            <Importer onDone={open} />
+            <RegistryPanel snapshot={snapshot} id={id} />
+            <Assets />
+            <PluginPanel />
+          </>
+        )}
+        {page === "executions" && (
+          <ExecutionPanel
+            onSnapshot={(n) => {
+              open(n);
+              P("analysis");
+            }}
+          />
+        )}
+        {page === "runs" && (
+          <HistoryPanel
+            en={en}
+            onOpen={(n) => {
+              open(n);
+              P("analysis");
+            }}
+          />
+        )}
+        {needs && !snapshot && (
+          <section>
+            <h3>Select a snapshot / 选择实验上下文</h3>
+            <p>
+              先导入历史实验或执行科研程序，再选择顶部快照。页面不会生成模拟实验结果。
+            </p>
+          </section>
+        )}
+        {snapshot && id !== null && (
+          <>
+            {page === "analysis" && (
+              <>
+                <AnalysisPanel key={id} snapshot={snapshot} id={id} />
+                <BatchPanel snapshot={snapshot} id={id} />
+                <InferencePanel key={id} snapshot={snapshot} id={id} />
+                <PluginPanel />
+              </>
+            )}
+            {page === "figures" && (
+              <FigureStudio key={id} snapshot={snapshot} id={id} />
+            )}
+            {page === "provenance" && <GraphPanel id={id} />}
+            {page === "audit" && <AuditPanel key={id} id={id} />}
+            {page === "reports" && (
+              <section>
+                <h3>Source-backed reports / 可追溯报告</h3>
+                <p>
+                  报告来自快照与版本化分析；归档不自动复制数据集和模型权重。
+                </p>
+                <div className="controls">
+                  {[
+                    ["Markdown", "/report"],
+                    ["HTML", "/report-export?format=html"],
+                    ["JSON", "/report-export?format=json"],
+                    ["Evidence ZIP", "/package"],
+                  ].map(([label, path]) => (
+                    <a key={label} href={"/api/projects/" + id + path}>
+                      {label} ↓
+                    </a>
+                  ))}
+                  <a href={"/api/v2/snapshots/" + id + "/report.pdf"}>
+                    PDF report ↓
+                  </a>
+                </div>
+                <details>
+                  <summary>Snapshot evidence manifest</summary>
+                  <Json value={snapshot.evidence} />
+                </details>
+              </section>
+            )}
+          </>
+        )}
+      </main>
+    </div>
+  );
+}
+createRoot(document.getElementById("root")!).render(<App />);

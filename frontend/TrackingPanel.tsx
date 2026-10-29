@@ -1,2 +1,95 @@
-import {useEffect,useState} from 'react';
-export function TrackingPanel(){const [state,S]=useState<any>(null),[path,P]=useState(''),[ignores,I]=useState(''),[error,E]=useState('');async function refresh(){try{const r=await fetch('/api/tracking/health');if(!r.ok)throw Error(await r.text());S(await r.json())}catch(e){E(String(e))}}useEffect(()=>{refresh();const id=setInterval(refresh,3000);return()=>clearInterval(id)},[]);async function register(){try{const r=await fetch('/api/tracking/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,ignores:ignores.split(',').map(s=>s.trim()).filter(Boolean)})});if(!r.ok)throw Error(await r.text());await refresh()}catch(e){E(String(e))}}return <section><h3 className="font-bold">Local Experiment Tracking / 本地持续追踪</h3><div className="flex gap-2 my-3"><input aria-label="Tracking directory" value={path} onChange={e=>P(e.target.value)} placeholder="Project directory"/><input aria-label="Tracking ignore patterns" value={ignores} onChange={e=>I(e.target.value)} placeholder="Ignore patterns, comma separated"/><button onClick={register}>Register / 注册</button></div>{error&&<p role="alert">{error}</p>}{state&&<><p>{state.projects.length} projects · {state.runs.length} runs · {state.metric_count} metric observations</p><div className="max-h-64 overflow-auto"><table className="w-full text-xs"><thead><tr><th>Source</th><th>State</th><th>Generation</th><th>Committed / Bytes</th><th>Error</th></tr></thead><tbody>{state.sources.map((s:any)=><tr key={s.id}><td>{s.path}</td><td>{s.status}</td><td>{s.generation}</td><td>{s.cursor} / {s.size}</td><td>{s.error}</td></tr>)}</tbody></table></div></>}</section>}
+import { useEffect, useState } from "react";
+export function TrackingPanel() {
+  const [state, S] = useState<any>(null),
+    [path, P] = useState(""),
+    [ignores, I] = useState(""),
+    [error, E] = useState("");
+  async function refresh() {
+    try {
+      const r = await fetch("/api/tracking/health");
+      if (!r.ok) throw Error(await r.text());
+      S(await r.json());
+    } catch (e) {
+      E(String(e));
+    }
+  }
+  useEffect(() => {
+    refresh();
+    const id = setInterval(refresh, 3000);
+    return () => clearInterval(id);
+  }, []);
+  async function register() {
+    try {
+      const r = await fetch("/api/tracking/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          path,
+          ignores: ignores
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        }),
+      });
+      if (!r.ok) throw Error(await r.text());
+      await refresh();
+    } catch (e) {
+      E(String(e));
+    }
+  }
+  return (
+    <section>
+      <h3 className="font-bold">Local Experiment Tracking / 本地持续追踪</h3>
+      <div className="flex gap-2 my-3">
+        <input
+          aria-label="Tracking directory"
+          value={path}
+          onChange={(e) => P(e.target.value)}
+          placeholder="Project directory"
+        />
+        <input
+          aria-label="Tracking ignore patterns"
+          value={ignores}
+          onChange={(e) => I(e.target.value)}
+          placeholder="Ignore patterns, comma separated"
+        />
+        <button onClick={register}>Register / 注册</button>
+      </div>
+      {error && <p role="alert">{error}</p>}
+      {state && (
+        <>
+          <p>
+            {state.projects.length} projects · {state.runs.length} runs ·{" "}
+            {state.metric_count} metric observations
+          </p>
+          <div className="max-h-64 overflow-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>State</th>
+                  <th>Generation</th>
+                  <th>Committed / Bytes</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.sources.map((s: any) => (
+                  <tr key={s.id}>
+                    <td>{s.path}</td>
+                    <td>{s.status}</td>
+                    <td>{s.generation}</td>
+                    <td>
+                      {s.cursor} / {s.size}
+                    </td>
+                    <td>{s.error}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}

@@ -3,7 +3,7 @@ from pathlib import Path
 import polars as pl
 import yaml
 import os
-SKIP = {".git", ".venv", "node_modules", ".researchaudit", "dist", "__pycache__"}
+SKIP = {".git", ".venv", "node_modules", ".researchaudit", "dist", "__pycache__", ".pytest_cache", "test-results", "playwright-report"}
 def git(root, *args):
     try: return subprocess.check_output(["git","-C",str(root),*args],stderr=subprocess.DEVNULL,timeout=10).decode().strip()
     except Exception: return None
@@ -14,7 +14,7 @@ def scan(root, checkpoint=None):
     paths=[]
     for directory, dirs, names in os.walk(root, followlinks=False):
         if checkpoint: checkpoint(0,0,"Discovering: "+str(Path(directory).relative_to(root)))
-        dirs[:] = sorted(d for d in dirs if d not in SKIP and not (Path(directory)/d).is_symlink())
+        dirs[:] = sorted(d for d in dirs if d not in SKIP and not d.startswith(".test-runs-") and not (Path(directory)/d).is_symlink())
         paths.extend(Path(directory)/name for name in sorted(names))
     for position,p in enumerate(sorted(paths)):
         if checkpoint: checkpoint(position,len(paths),str(p.relative_to(root)))
@@ -36,7 +36,8 @@ def scan(root, checkpoint=None):
                 obj = json.loads(p.read_text(encoding="utf-8")) if p.suffix == ".json" else yaml.safe_load(p.read_text(encoding="utf-8"))
                 if isinstance(obj,dict):
                     if "config" in p.stem or "param" in p.stem:
-                        run["params"].update(obj)
+                        run["params"].update({k:v for k,v in obj.items() if k!='researchaudit_execution'})
+                        if 'researchaudit_execution' in obj:run.setdefault('execution',{}).update(obj['researchaudit_execution'])
                         run.setdefault("config_sources",[]).append(ev)
                         run.setdefault("metric_definitions",{}).update(obj.get("metric_definitions",{}))
                     else:

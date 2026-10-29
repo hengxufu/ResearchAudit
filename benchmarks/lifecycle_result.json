@@ -1,0 +1,20 @@
+{
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+  "logical_cpus": 24,
+  "python": "3.9.13",
+  "runs": 1000,
+  "observations": 100000,
+  "import_seconds": 0.22930170000000005,
+  "duckdb_query_seconds": 0.3713445000000001,
+  "three_command_seconds": 1.6499108,
+  "command_states": [
+    "Succeeded",
+    "Succeeded",
+    "Succeeded"
+  ],
+  "cpu_seconds_parent": 1.03125,
+  "peak_python_allocation_bytes": 51814895,
+  "storage_bytes": 761628,
+  "conditions": "Temporary local directory, warm cache, concurrency limit 2. CPU excludes children; tracemalloc excludes native allocations; browser not measured."
+}

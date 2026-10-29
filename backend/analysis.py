@@ -55,4 +55,9 @@ def audit(s):
     results=[item for name,fn in RULES for item in fn(s)]
     results += [dict(rule='import',status='FAIL',reason=i['message'],suggestion='Inspect source file',**i) for i in s['issues']]
     results.append({'rule':'reproduction','status':'UNKNOWN','message':'Reproduction and scientific correctness have not been executed','reason':'Static evidence only','suggestion':'Re-run with pinned environment','evidence':[]})
+    layers={'configuration':'reproducibility','seed':'reproducibility','git_version':'reproducibility','reproduction':'reproducibility','comparability':'comparability'}
+    for result in results:
+        result['rule_version']='1.0'
+        result['layer']=layers.get(result['rule'],'integrity')
+        result['condition']='Imported snapshot evidence only'
     return results

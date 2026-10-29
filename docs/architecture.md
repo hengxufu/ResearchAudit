@@ -47,3 +47,7 @@ GET /api/projects/{id}/observations?metric=...&run_id=...&limit=10000&offset=0 q
 backend/jobs.py owns import_jobs(id,path,status,processed,total,current_file,snapshot_id,error,created,updated). One ThreadPoolExecutor worker executes scans; a process-local lock protects cancellation/commit boundaries. Eight unfinished jobs is the submission limit. SQLite stores task state and startup marks stale queued/running/cancelling/committing jobs interrupted; it never silently resumes them. Successful jobs reference immutable snapshots. Raw files and credentials are never uploaded.
 
 API: POST /api/import-jobs {path} returns 202; GET /api/import-jobs lists recent 50 tasks; GET /api/import-jobs/{id} retrieves state; POST /api/import-jobs/{id}/cancel requests cancellation. Queue full returns 429, unknown task 404, cancellation after commit begins 409. Statuses: queued, running, cancelling, committing, completed, cancelled, failed, interrupted. Progress is phase-local. Single uvicorn process required. Synchronous import remains available for integrations/tests.
+
+## Current 2.0 design
+
+See v2_architecture.md for the authoritative current modules, additive migrations, indexed registry, execution/tracking boundaries, immutable assets/analyses/reports, security scope and unresolved operational limits. The above sections are historical design records and contain superseded planned/implemented status statements.

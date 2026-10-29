@@ -1,0 +1,25 @@
+{
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+  "logical_cpus": 24,
+  "python": "3.9.13",
+  "runs": 1100,
+  "stored_observations": 110000,
+  "queried_observations": 100000,
+  "snapshot_and_index_seconds": 0.16235299999999997,
+  "history_page_offset_1000_seconds": 0.019922999999999913,
+  "duckdb_query_seconds": 0.19115400000000005,
+  "three_commands_seconds": 1.811909,
+  "states": [
+    "Succeeded",
+    "Succeeded",
+    "Succeeded"
+  ],
+  "parent_cpu_seconds": 0.828125,
+  "parent_rss_bytes": 139116544,
+  "parent_peak_working_set_bytes": 144834560,
+  "parent_io_read_bytes": 3737698,
+  "parent_io_write_bytes": 2422548,
+  "storage_bytes": 1004565,
+  "conditions": "Warm local workspace temporary directory; concurrency=2; cumulative parent process counters, excludes child CPU/memory; synthetic TEST DATA; no GPU measurement."
+}

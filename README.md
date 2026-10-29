@@ -1,50 +1,47 @@
-# ResearchAudit 科研实验管家
+# ResearchAudit 2.0 development workbench
 
-本地优先 V0.1，所有指标来自导入文件，不附带模拟实验。Python 3.9+ / Node 20+。
+ResearchAudit is a local-first scientific experiment workbench. The current version is **2.0.0-dev.0**, not a claim that every production acceptance gate is complete. It runs real commands, imports real files and stores auditable results. It does not upload research data automatically.
 
-## 启动
+## Install and start
+
+Validated locally on Windows, Python 3.9.13 and Node 24. Python 3.9+ and Node 24 are recommended for this source tree. Linux/Windows CI definitions are included, but remote CI results have not been observed.
 
 ```powershell
+cd D:\ResearchAudit
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -r requirements.txt
-cd frontend
-npm install
-npm run build
-cd ..
-.\.venv\Scripts\python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+npm ci --prefix frontend
+npm run build --prefix frontend
+.\start.ps1
 ```
 
-打开 http://127.0.0.1:8000 。开发前端用 npm run dev，代理后端 8000。测试：`.\.venv\Scripts\python -m pytest`。
+Open http://127.0.0.1:8000 ; API documentation is at /docs. Use one uvicorn process. For frontend development run `npm run dev --prefix frontend` while the backend listens on 8000. Linux uses `.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000`.
 
-## 架构与阶段
+## Nine connected pages
 
-1. V0.1：FastAPI API、SQLite 不可变采集快照、Polars CSV/Parquet 读取、JSON/TensorBoard/MLflow 指标、Git 与 SHA256、交互曲线、完整性审计、Markdown 证据报告、守恒漂移插件。
-2. V0.2：显式实验清单与指标单位/方向/数据划分契约；按模型、数据集和种子分组统计；DuckDB 查询及 Parquet 长表缓存；增量扫描与后台任务。
-3. V0.3：收敛阶、敏感性和误差传播插件、可审核论文图模板、Tauri 封装。
+Dashboard shows real execution and resource counters. Project Explorer imports projects and manages datasets/model references and experimental associations. Experiment Center creates Pending commands and starts them only on explicit action. Run Explorer searches/paginates historical records and versions curation. Analysis Studio computes source-backed descriptions, batch summaries and declared paired/independent comparisons. Figure Studio overlays real series with box/violin/heatmap views. Provenance Explorer shows source/experiment/analysis/figure/report links. Audit Center stores versioned checks and source verification. Report Center exports Markdown/HTML/JSON/PDF and evidence ZIPs.
 
-backend/collect.py 采集；storage.py 持久化；analysis.py 描述统计和审计；validation.py 插件注册；main.py HTTP；frontend React/TypeScript/Tailwind/Plotly。
+Navigation supports Chinese/English page names, light/dark themes, shared snapshot context and search across historical run metadata. Some explanatory text and advanced controls are still bilingual rather than fully localized.
 
-## 数据约定与边界
+## Execute a research program
 
-每个相对父目录视为一个实验。config.json 或 params.json 存参数（seed、dataset、split）；metrics.json 支持数值对象或 metrics 字段；CSV/Parquet 数值列转为曲线，最后一个有限观测转为汇总指标。重复列名跨文件目前按扫描顺序覆盖，应使用不同列名或独立实验目录。JSON 不解析 YAML 参数，但仍保存文件哈希。TensorBoard 使用真实 step；CSV 横轴为观测序号。MLflow 支持本地 metrics 文件格式，不连接远端服务。
+Enter an existing working directory and a JSON argument array, for example `["D:\\tools\\python.exe", "train.py"]`. Create only saves Pending configuration; Start is required to execute. Python and C++ executables use the same shell-free process interface. Program outputs intended for automatic ingestion should be written to the `RESEARCHAUDIT_OUTPUT_DIR` environment directory. `RESEARCHAUDIT_RUN_ID` is also provided. Standard output/error stream to bounded-read APIs; a configurable soft log watchdog limits growth. Pause is unsupported and rejected.
 
-快照保存导入时的值、相对源路径、SHA256、Git commit、脏工作区状态和采集机器信息；不复制源文件，源文件需自行归档。采集环境不等于原实验执行环境。导入耗时与文件规模相关，当前同步扫描；单文件 256 MiB 上限，跳过会记录。守恒插件通过 POST /api/projects/{id}/validate/conservation?run=...&metric=... 调用。比较 API 提供描述均值和样本标准差，不声称跨实验可比或独立。尚无推断统计和自动异常值判定。Plotly 工具栏支持 PNG 导出。
+API execution specs support priority, dependencies, timeout, optional soft memory limit and parameters. Grid and seeded random searches create Pending drafts. Dependency updates detect cycles. Restarts mark stale active/queued records Interrupted and never silently relaunch commands. Process-tree termination is tested locally; Windows Job Objects, OS-enforced CPU/memory quotas and remote scheduling are not implemented. The app is a local single-user execution service, not a security sandbox.
 
-服务只应绑定 loopback，本地 API 可以读取当前用户有权读取的导入目录，无身份验证。SQLite 位于 .researchaudit，可用 RESEARCHAUDIT_HOME 指定。报告包含绝对项目路径与本地环境信息。DuckDB/SciPy 已列依赖，复杂分析与缓存留后续阶段。
+## Data and numerical contracts
 
-## 更新：指标契约与四级审计
+CSV/Parquet numeric columns and JSON metrics feed immutable snapshots. TensorBoard and MLflow local metrics have existing import adapters. Live tracking supports CSV, JSONL and CRC-checked TensorBoard frames, persistent cursors, source generations, identity-based rename/rotation handling, periodic validation and ignored directories. Models are stat-only in live tracking. Unchanged logs skip content reads until periodic verification; changed logs still rehash committed prefixes for strict integrity. Very large append histories therefore still have an I/O scaling limit.
 
-当前版本支持 YAML 配置、幂等快照、最终/最优指标、参数过滤、多种子描述汇总以及 PASS/WARN/FAIL/UNKNOWN 审计。最终值是最后观测，末尾缺失不会静默回退为之前的值。CSV 同名列跨文件冲突会记录并拒绝后者。
-
-每个实验目录的 config.yaml 可声明：
+Each run config can declare:
 
 ```yaml
 seed: 42
-dataset: my-dataset
+dataset: experiment-dataset
 dataset_version: v1
 split: validation
 evaluation_protocol: evaluation-v1
-model_version: baseline-v1
+model_version: baseline
 metric_definitions:
   loss:
     direction: minimize
@@ -52,24 +49,40 @@ metric_definitions:
     method: mean squared error
 ```
 
-这些字段是用户声明；相同声明不等于数据集内容已验证相同。缺少可比性字段时结果为 UNKNOWN，不计算跨种子均值。记录完整性、复现执行和科学正确性分别判断。
+Final is the last observation, including missing values; last_finite is separate. Best requires a direction. Missing evaluation contracts yield UNKNOWN. Statistics operate on run-level final results for inference; Epoch observations are descriptive only. Independence/normality assumptions are explicit and never certified automatically. Physical bounds require matching units. Successful execution does not establish scientific correctness.
 
-详细资料：docs/open_source_research.md、docs/architecture.md、docs/implementation_plan.md。运行 `.\.venv\Scripts\python -m pytest -q` 验证受控 TEST DATA；当前 6 项测试通过。前端 `npm run build` 通过，Plotly 包体积仍较大。SVG 导出和显示平滑已加入；PDF 与误差分布图尚未实现。前文旧说明中的“最后有限值”已由这里的最终值规则取代；YAML 参数现在实际解析。
+Assets use metadata-only versions by default; explicit full hashes and integrity checks do not copy datasets or weights. Historical curation and experiment association corrections are stored separately from imported facts.
 
-## 图表和证据导出更新
+## Persistence and exports
 
-曲线支持后端 PDF/SVG/PNG 导出，另提供观测分布 PDF。每次导出保存图表规格和来源哈希，可通过 /api/projects/{id}/figures 查询；/graph 返回导入证据图。分布图描述选定指标的观测分布，只有输入指标本身是逐样本误差时才可解释为误差分布。
+State lives under .researchaudit (override with RESEARCHAUDIT_HOME). SQLite stores metadata, analyses, audits and source cursors; Parquet caches metrics for DuckDB. SQLite snapshots remain authoritative and corrupted metric caches are rebuilt. Existing schemas migrate additively. Reports preserve source references and methods. PDF regeneration is deterministic for unchanged inputs on the same environment. Evidence ZIPs include checksums and a replot script; external datasets/weights are referenced.
 
-指标缓存写入 Parquet，/observations 接口支持 DuckDB 分页查询。当前仍保留 JSON 曲线，尚未完成大型数据的全链路流式处理。报告增加可读指标和审计表。最新测试 11 项通过，包含真实格式 TensorBoard/MLflow 和图表导出。依赖新增兼容 Python 3.9 的 Matplotlib 3.9.x。
+Independently verify an archive without extracting or executing its contents:
 
-## 历史实验、条件和变量管理
+```powershell
+python backend/v2/verify_package.py path\to\researchaudit.zip
+```
 
-工作台新增历史实验档案，可检索历史参数和补录信息，按标签、审核状态筛选，为每个快照内实验维护条件、变量、依据、标题和备注。每次保存追加修订版本，并检测并发修改冲突；可将旧修订作为新草稿。原始参数和指标保持只读，新采集快照不自动继承旧条件声明。详细操作与 API 见 docs/history_management.md。
+DVC metadata intake and RO-Crate reference-metadata export/intake are provided. These do not implement DVC remote fetching or complete certified RO-Crate/MLflow round-trip compatibility.
 
-## 后台导入任务
+## Verification
 
-界面导入现在后台执行，显示当前文件、任务状态与阶段内计数，并支持取消。取消在文件操作之间生效；进入 committing 后不再取消。服务重启会把未完成任务标记为 interrupted，可重新发起导入。请使用默认单进程启动方式，不使用 uvicorn 多 worker。任务状态保存在本地 SQLite；现有同步导入 API 保留。
+```powershell
+.\.venv\Scripts\python -m pytest -q
+npm run build --prefix frontend
+cd frontend
+$env:PW_BROWSER_CHANNEL="msedge"
+npm run test:e2e
+```
 
-## 本地持续追踪（首个增量版本）
+For Chromium instead, run `npx playwright install chromium` and omit PW_BROWSER_CHANNEL. E2E creates an isolated database, starts localhost, launches a controlled TEST DATA program and verifies navigation, execution, statistics, figures, audit, PDF download and ZIP integrity. On a restricted Windows sandbox, choose a fresh workspace `--basetemp .test-runs-<unique-name>` for pytest; test rename permissions can differ from user temp directories.
 
-工作台新增 Local Experiment Tracking 面板，注册目录后持续采集 CSV/JSONL。可配置忽略 glob；同一项目下每个运行应使用独立目录。诊断数据保存至 .researchaudit/tracking.sqlite，watchfiles 事件与周期扫描共同校验。大型模型仅登记位置与元数据。详细能力和未完成验收项见 docs/local_tracking_engine.md；基准脚本见 benchmarks/tracking_benchmark.py。当前阶段不是完整 P0/P1/P2 验收版本。
+Benchmarks: `benchmarks/v2_benchmark.py` and `benchmarks/v2_result.json`. All benchmark/fixture data are explicitly TEST DATA. See docs/v2_acceptance.md for measured results and remaining limits.
+
+## Engineering documentation
+
+- docs/v2_architecture.md: architecture, data model, migrations and operational boundaries.
+- docs/v2_api.md: added endpoint contracts.
+- docs/v2_acceptance.md: coverage, benchmark conditions and uncompleted requirements.
+- docs/open_source_research.md: source research and license notes.
+- docs/local_tracking_engine.md and docs/lifecycle_upgrade.md: historical implementation records; newer v2 documents supersede their status statements.

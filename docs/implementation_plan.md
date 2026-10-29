@@ -54,3 +54,11 @@ Still pending: scientific UI, persisted analysis records, artifact bytes/claim e
 ## Local tracking increment
 
 Implemented a separate WAL tracking journal, transactional CSV/JSONL cursor/record/metric batches, registered roots/ignores, watchfiles plus periodic reconciliation, stat-only artifacts, monitor diagnostics, SDK JSONL emitter, initial domain adapter interfaces and SQLite backup. See local_tracking_engine.md for exact scope and remaining P0/P1/P2 gates. 20 tests pass. Do not mark the complete Local Experiment Tracking Engine upgrade accepted: live parser coverage, rotation deduplication, actual crash injection, lifecycle detection and resource limits remain incomplete.
+
+## Lifecycle workbench upgrade
+
+Implemented explicit command execution with durable lifecycle, dependency/priority queue and concurrency 2, output/log/result association, Pending grid drafts, source-backed descriptive and paired statistical APIs, versioned audit metadata, HTML/JSON exports and SHA256 reference archive with replot script. Execution and descriptive analysis are available in the UI. Full phase-by-phase acceptance and remaining work are in lifecycle_upgrade.md; stages are partial, not all marked complete. Reproducible benchmark covers 1000 runs, 100000 metrics and three real tasks.
+
+## ResearchAudit 2.0 development delivery
+
+The current implementation supersedes older completion statements in this file. Delivered: versioned /api/v2 modules; nine-page workbench with actual data; indexed registry and explicit experiment association history; immutable asset versions; CSV/JSONL/TensorBoard recovery/rotation tests; DAG and seeded random search; resource telemetry and soft watchdogs; batch/Welch/Holm/correlation/trend/Pareto analysis; versioned audits; bounded domain format parsers; deterministic PDF and independently verifiable evidence archive. Final verification and remaining gates are in v2_acceptance.md. Target architecture/migrations: v2_architecture.md. Added API contracts: v2_api.md. Version remains 2.0.0-dev.0, not a claim that every requested production feature is complete.

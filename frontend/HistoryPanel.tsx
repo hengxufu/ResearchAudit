@@ -1,14 +1,387 @@
-import {useEffect,useState} from 'react';
-type Field={name:string,value:string|number|boolean,unit:string,source:string,role?:string};
-const blank=()=>({name:'',value:'',unit:'',source:''});
-async function request(path:string,options?:RequestInit){const r=await fetch('/api'+path,options);if(!r.ok)throw Error(await r.text());return r.json()}
-export function HistoryPanel({en,onOpen}:{en:boolean,onOpen:(id:number)=>void}){
- const [records,R]=useState<any[]>([]),[q,Q]=useState(''),[status,S]=useState(''),[tag,T]=useState(''),[selected,X]=useState<any>(null),[draft,D]=useState<any>(null),[error,E]=useState(''),[message,M]=useState(''),[versions,V]=useState<any[]>([]),[timeline,H]=useState<any[]>([]),[busy,B]=useState(false);
- const t=(zh:string,enText:string)=>en?enText:zh;
- async function search(){try{const r=await request('/history?'+new URLSearchParams({q,status,tag}));R(r.items)}catch(e){E(String(e))}}
- useEffect(()=>{search()},[]);
- async function choose(record:any){X(record);D({...record.annotation});M('');E('');try{V(await request(`/projects/${record.snapshot_id}/runs/${record.run_id}/revisions`));H(await request('/history/'+record.run_id))}catch(e){E(String(e))}}
- async function save(){B(true);E('');try{const {revision,created,...payload}=draft;const saved=await request(`/projects/${selected.snapshot_id}/runs/${selected.run_id}/annotation`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,expected_revision:revision})});D(saved);V(await request(`/projects/${selected.snapshot_id}/runs/${selected.run_id}/revisions`));await search();M(t('已保存新版本，原始采集数据保持不变','New revision saved; imported facts preserved'))}catch(e){E(String(e))}finally{B(false)}}
- function fields(key:'conditions'|'variables') {return <div className="mt-5"><h4 className="font-semibold">{key==='conditions'?t('实验条件','Experimental conditions'):t('实验变量','Research variables')}</h4><p className="text-xs text-slate-500 my-2">{t('填写原始记录或补录依据。单位须显式记录；此处不自动换算。','Record the source of each declaration. Units are explicit; no automatic conversion.')}</p>{draft[key].map((f:Field,i:number)=><div key={i} className="grid grid-cols-2 lg:grid-cols-6 gap-2 mb-2">{['name','value','unit','source'].map(k=><input key={k} aria-label={key+' '+k+' '+i} placeholder={{name:'Name / 名称',value:'Value / 值',unit:'Unit / 单位',source:'Source / 依据'}[k]} value={String((f as any)[k]??'')} onChange={e=>D({...draft,[key]:draft[key].map((v:Field,j:number)=>j===i?{...v,[k]:e.target.value}:v)})}/>)}{key==='variables'&&<select aria-label={'Variable role '+i} value={f.role} onChange={e=>D({...draft,variables:draft.variables.map((v:Field,j:number)=>j===i?{...v,role:e.target.value}:v)})}>{['independent','dependent','controlled','confounder'].map(r=><option key={r}>{r}</option>)}</select>}<button onClick={()=>D({...draft,[key]:draft[key].filter((_:Field,j:number)=>j!==i)})}>{t('移除','Remove')}</button></div>)}<button onClick={()=>D({...draft,[key]:[...draft[key],{...blank(),...(key==='variables'?{role:'independent'}:{})}]})}>+ {t('添加','Add')}</button></div>}
- return <section><h3 className="text-lg font-bold">{t('历史实验档案','Historical experiment registry')}</h3><div className="flex flex-wrap gap-2 my-4"><input aria-label="History search" value={q} onChange={e=>Q(e.target.value)} placeholder={t('检索参数、条件、变量与备注','Search parameters, conditions, variables, notes')}/><input aria-label="Tag filter" value={tag} onChange={e=>T(e.target.value)} placeholder="Tag / 标签"/><select aria-label="Status filter" value={status} onChange={e=>S(e.target.value)}><option value="">All / 全部</option>{['unreviewed','reviewed','archived'].map(v=><option key={v}>{v}</option>)}</select><button onClick={search}>{t('检索 / 刷新','Search / refresh')}</button></div><div className="max-h-64 overflow-auto"><table className="w-full text-sm"><thead><tr><th>Snapshot</th><th>Run / Title</th><th>Status</th><th>Tags</th><th></th></tr></thead><tbody>{records.map(r=><tr key={r.snapshot_id+r.run_id}><td>#{r.snapshot_id}<br/>{r.created}</td><td>{r.annotation.title||r.name}</td><td>{r.annotation.status}</td><td>{r.annotation.tags.join(', ')}</td><td><button onClick={()=>choose(r)}>{t('管理','Manage')}</button><button onClick={()=>onOpen(r.snapshot_id)}>{t('查看结果','Results')}</button></td></tr>)}</tbody></table></div>{error&&<p role="alert" className="text-red-700 my-3">{error}</p>}{message&&<p role="status" className="text-teal-700 my-3">{message}</p>}{draft&&<div className="mt-5 border-t pt-5"><h4 className="font-semibold">#{selected.snapshot_id} · {selected.name} · Revision {draft.revision}</h4><p className="text-xs text-slate-500 my-3">{t('以下为用户补录，不会自动提升审计通过状态。','User declarations below do not automatically upgrade audit status.')}</p><div className="flex gap-2 flex-wrap"><input aria-label="Experiment title" placeholder="Title / 标题" value={draft.title} onChange={e=>D({...draft,title:e.target.value})}/><input aria-label="Experiment tags" placeholder="Tags, comma separated" value={draft.tags.join(',')} onChange={e=>D({...draft,tags:e.target.value.split(',').map(v=>v.trim()).filter(Boolean)})}/><select aria-label="Review status" value={draft.status} onChange={e=>D({...draft,status:e.target.value})}>{['unreviewed','reviewed','archived'].map(v=><option key={v}>{v}</option>)}</select></div><details className="mt-3"><summary>{t('原始采集参数（只读）','Imported parameters (read-only)')}</summary><pre className="text-xs overflow-auto">{JSON.stringify(selected.imported_params,null,2)}</pre></details>{fields('conditions')}{fields('variables')}<textarea aria-label="Experiment notes" className="border rounded w-full p-3 mt-4" placeholder="Notes / 备注" value={draft.notes} onChange={e=>D({...draft,notes:e.target.value})}/><button disabled={busy} className="bg-teal-700 text-white my-3" onClick={save}>{busy?'Saving…':t('保存新版本','Save revision')}</button><h4>{t('补录修订记录','Curation revision history')}</h4>{versions.map(v=><details key={v.revision}><summary>r{v.revision} · {v.created} · {v.title}</summary><pre className="text-xs overflow-auto">{JSON.stringify(v,null,2)}</pre><button onClick={()=>D({...v,revision:draft.revision})}>{t('以此版本为草稿','Use as draft')}</button></details>)}<h4 className="mt-3">{t('同一实验的采集历史','Run snapshot history')}</h4>{timeline.map(r=><button key={r.snapshot_id} onClick={()=>onOpen(r.snapshot_id)}>#{r.snapshot_id} · {r.created}</button>)}</div>}</section>
+import { useEffect, useState } from "react";
+type Field = {
+  name: string;
+  value: string | number | boolean;
+  unit: string;
+  source: string;
+  role?: string;
+};
+const blank = () => ({ name: "", value: "", unit: "", source: "" });
+async function request(path: string, options?: RequestInit) {
+  const r = await fetch("/api" + path, options);
+  if (!r.ok) throw Error(await r.text());
+  return r.json();
+}
+export function HistoryPanel({
+  en,
+  onOpen,
+}: {
+  en: boolean;
+  onOpen: (id: number) => void;
+}) {
+  const [records, R] = useState<any[]>([]),
+    [q, Q] = useState(""),
+    [status, S] = useState(""),
+    [tag, T] = useState(""),
+    [selected, X] = useState<any>(null),
+    [draft, D] = useState<any>(null),
+    [error, E] = useState(""),
+    [message, M] = useState(""),
+    [versions, V] = useState<any[]>([]),
+    [timeline, H] = useState<any[]>([]),
+    [busy, B] = useState(false),
+    [offset, O] = useState(0),
+    [total, N] = useState(0);
+  const t = (zh: string, enText: string) => (en ? enText : zh);
+  async function search() {
+    try {
+      const r = await request(
+        "/history?" +
+          new URLSearchParams({
+            q,
+            status,
+            tag,
+            limit: "25",
+            offset: String(offset),
+          }),
+      );
+      R(r.items);
+      N(r.total);
+    } catch (e) {
+      E(String(e));
+    }
+  }
+  useEffect(() => {
+    search();
+  }, [offset]);
+  async function choose(record: any) {
+    X(record);
+    D({ ...record.annotation });
+    M("");
+    E("");
+    try {
+      V(
+        await request(
+          `/projects/${record.snapshot_id}/runs/${record.run_id}/revisions`,
+        ),
+      );
+      H(await request("/history/" + record.run_id));
+    } catch (e) {
+      E(String(e));
+    }
+  }
+  async function save() {
+    B(true);
+    E("");
+    try {
+      const { revision, created, ...payload } = draft;
+      const saved = await request(
+        `/projects/${selected.snapshot_id}/runs/${selected.run_id}/annotation`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, expected_revision: revision }),
+        },
+      );
+      D(saved);
+      V(
+        await request(
+          `/projects/${selected.snapshot_id}/runs/${selected.run_id}/revisions`,
+        ),
+      );
+      await search();
+      M(
+        t(
+          "已保存新版本，原始采集数据保持不变",
+          "New revision saved; imported facts preserved",
+        ),
+      );
+    } catch (e) {
+      E(String(e));
+    } finally {
+      B(false);
+    }
+  }
+  function fields(key: "conditions" | "variables") {
+    return (
+      <div className="mt-5">
+        <h4 className="font-semibold">
+          {key === "conditions"
+            ? t("实验条件", "Experimental conditions")
+            : t("实验变量", "Research variables")}
+        </h4>
+        <p className="text-xs text-slate-500 my-2">
+          {t(
+            "填写原始记录或补录依据。单位须显式记录；此处不自动换算。",
+            "Record the source of each declaration. Units are explicit; no automatic conversion.",
+          )}
+        </p>
+        {draft[key].map((f: Field, i: number) => (
+          <div key={i} className="grid grid-cols-2 lg:grid-cols-6 gap-2 mb-2">
+            {["name", "value", "unit", "source"].map((k) => (
+              <input
+                key={k}
+                aria-label={key + " " + k + " " + i}
+                placeholder={
+                  {
+                    name: "Name / 名称",
+                    value: "Value / 值",
+                    unit: "Unit / 单位",
+                    source: "Source / 依据",
+                  }[k]
+                }
+                value={String((f as any)[k] ?? "")}
+                onChange={(e) =>
+                  D({
+                    ...draft,
+                    [key]: draft[key].map((v: Field, j: number) =>
+                      j === i ? { ...v, [k]: e.target.value } : v,
+                    ),
+                  })
+                }
+              />
+            ))}
+            {key === "variables" && (
+              <select
+                aria-label={"Variable role " + i}
+                value={f.role}
+                onChange={(e) =>
+                  D({
+                    ...draft,
+                    variables: draft.variables.map((v: Field, j: number) =>
+                      j === i ? { ...v, role: e.target.value } : v,
+                    ),
+                  })
+                }
+              >
+                {["independent", "dependent", "controlled", "confounder"].map(
+                  (r) => (
+                    <option key={r}>{r}</option>
+                  ),
+                )}
+              </select>
+            )}
+            <button
+              onClick={() =>
+                D({
+                  ...draft,
+                  [key]: draft[key].filter((_: Field, j: number) => j !== i),
+                })
+              }
+            >
+              {t("移除", "Remove")}
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() =>
+            D({
+              ...draft,
+              [key]: [
+                ...draft[key],
+                {
+                  ...blank(),
+                  ...(key === "variables" ? { role: "independent" } : {}),
+                },
+              ],
+            })
+          }
+        >
+          + {t("添加", "Add")}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <section>
+      <h3 className="text-lg font-bold">
+        {t("历史实验档案", "Historical experiment registry")}
+      </h3>
+      <div className="flex flex-wrap gap-2 my-4">
+        <input
+          aria-label="History search"
+          value={q}
+          onChange={(e) => Q(e.target.value)}
+          placeholder={t(
+            "检索参数、条件、变量与备注",
+            "Search parameters, conditions, variables, notes",
+          )}
+        />
+        <input
+          aria-label="Tag filter"
+          value={tag}
+          onChange={(e) => T(e.target.value)}
+          placeholder="Tag / 标签"
+        />
+        <select
+          aria-label="Status filter"
+          value={status}
+          onChange={(e) => S(e.target.value)}
+        >
+          <option value="">All / 全部</option>
+          {["unreviewed", "reviewed", "archived"].map((v) => (
+            <option key={v}>{v}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => {
+            if (offset) O(0);
+            else search();
+          }}
+        >
+          {t("检索 / 刷新", "Search / refresh")}
+        </button>
+      </div>
+      <div className="controls my-3">
+        <button
+          disabled={offset === 0}
+          onClick={() => O(Math.max(0, offset - 25))}
+        >
+          Previous
+        </button>
+        <span>
+          {offset + 1}–{Math.min(offset + 25, total)} / {total}
+        </span>
+        <button disabled={offset + 25 >= total} onClick={() => O(offset + 25)}>
+          Next
+        </button>
+      </div>
+      <div className="max-h-64 overflow-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr>
+              <th>Snapshot</th>
+              <th>Run / Title</th>
+              <th>Status</th>
+              <th>Tags</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {records.map((r) => (
+              <tr key={r.snapshot_id + r.run_id}>
+                <td>
+                  #{r.snapshot_id}
+                  <br />
+                  {r.created}
+                </td>
+                <td>{r.annotation.title || r.name}</td>
+                <td>{r.annotation.status}</td>
+                <td>{r.annotation.tags.join(", ")}</td>
+                <td>
+                  <button onClick={() => choose(r)}>
+                    {t("管理", "Manage")}
+                  </button>
+                  <button onClick={() => onOpen(r.snapshot_id)}>
+                    {t("查看结果", "Results")}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {error && (
+        <p role="alert" className="text-red-700 my-3">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p role="status" className="text-teal-700 my-3">
+          {message}
+        </p>
+      )}
+      {draft && (
+        <div className="mt-5 border-t pt-5">
+          <h4 className="font-semibold">
+            #{selected.snapshot_id} · {selected.name} · Revision{" "}
+            {draft.revision}
+          </h4>
+          <p className="text-xs text-slate-500 my-3">
+            {t(
+              "以下为用户补录，不会自动提升审计通过状态。",
+              "User declarations below do not automatically upgrade audit status.",
+            )}
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <input
+              aria-label="Experiment title"
+              placeholder="Title / 标题"
+              value={draft.title}
+              onChange={(e) => D({ ...draft, title: e.target.value })}
+            />
+            <input
+              aria-label="Experiment tags"
+              placeholder="Tags, comma separated"
+              value={draft.tags.join(",")}
+              onChange={(e) =>
+                D({
+                  ...draft,
+                  tags: e.target.value
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter(Boolean),
+                })
+              }
+            />
+            <select
+              aria-label="Review status"
+              value={draft.status}
+              onChange={(e) => D({ ...draft, status: e.target.value })}
+            >
+              {["unreviewed", "reviewed", "archived"].map((v) => (
+                <option key={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+          <details className="mt-3">
+            <summary>
+              {t("原始采集参数（只读）", "Imported parameters (read-only)")}
+            </summary>
+            <pre className="text-xs overflow-auto">
+              {JSON.stringify(selected.imported_params, null, 2)}
+            </pre>
+          </details>
+          {fields("conditions")}
+          {fields("variables")}
+          <textarea
+            aria-label="Experiment notes"
+            className="border rounded w-full p-3 mt-4"
+            placeholder="Notes / 备注"
+            value={draft.notes}
+            onChange={(e) => D({ ...draft, notes: e.target.value })}
+          />
+          <button
+            disabled={busy}
+            className="bg-teal-700 text-white my-3"
+            onClick={save}
+          >
+            {busy ? "Saving…" : t("保存新版本", "Save revision")}
+          </button>
+          <h4>{t("补录修订记录", "Curation revision history")}</h4>
+          {versions.map((v) => (
+            <details key={v.revision}>
+              <summary>
+                r{v.revision} · {v.created} · {v.title}
+              </summary>
+              <pre className="text-xs overflow-auto">
+                {JSON.stringify(v, null, 2)}
+              </pre>
+              <button onClick={() => D({ ...v, revision: draft.revision })}>
+                {t("以此版本为草稿", "Use as draft")}
+              </button>
+            </details>
+          ))}
+          <h4 className="mt-3">
+            {t("同一实验的采集历史", "Run snapshot history")}
+          </h4>
+          {timeline.map((r) => (
+            <button key={r.snapshot_id} onClick={() => onOpen(r.snapshot_id)}>
+              #{r.snapshot_id} · {r.created}
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
