@@ -39,7 +39,9 @@ class Engine:
                     if path.is_symlink() or any(fnmatch.fnmatch(rel,p) or fnmatch.fnmatch(name,p) for p in ignores):continue
                     seen.add(rel)
                     try:self.ingest(project,path,rel)
-                    except OSError:LOG.exception('Unable to read %s',rel)
+                    except Exception:
+                        # Isolate file/plugin failures so remaining sources are still collected.
+                        LOG.exception('Unable to ingest %s (project %s)',rel,project['id'])
             with self.lock,self.connect() as c:
                 for row in c.execute('SELECT id,path FROM sources WHERE project_id=?',(project['id'],)).fetchall():
                     if row['path'] not in seen:c.execute("UPDATE sources SET status='deleted' WHERE id=?",(row['id'],))
