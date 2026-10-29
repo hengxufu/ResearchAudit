@@ -1,0 +1,12 @@
+{
+  "platform": "Windows-10-10.0.26300-SP0",
+  "python": "3.9.13",
+  "records": 10001,
+  "model_bytes_metadata_only": 134217728,
+  "log_bytes": 308916,
+  "initial_scan_seconds": 0.20832039999999996,
+  "append_reconcile_seconds": 0.04093009999999997,
+  "cpu_seconds": 0.140625,
+  "database_bytes": 3883008,
+  "scope": "single project, warm local filesystem, explicit reconcile; excludes watcher waiting time; no hardware I/O counter measurement"
+}

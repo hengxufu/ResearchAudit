@@ -13,7 +13,10 @@ from . import jobs
 @asynccontextmanager
 async def lifespan(app):
     jobs.recover()
-    yield
+    app.state.tracker=tracking_engine()
+    app.state.tracker.start()
+    try: yield
+    finally: app.state.tracker.stop()
 app=FastAPI(lifespan=lifespan,title="ResearchAudit",version="0.1.0")
 class ImportRequest(BaseModel):
     path: str
@@ -131,4 +134,80 @@ def cancel_import(job_id:str):
     try: return jobs.cancel(job_id)
     except KeyError: raise HTTPException(404,"Import job not found")
     except ValueError as e: raise HTTPException(409,str(e))
+from . import science, samples, evidence
+class ScientificRequest(BaseModel):
+    model_config=ConfigDict(extra="forbid",allow_inf_nan=False)
+    run_id:str
+    metric:str
+    x:List[float]=Field(default_factory=list,max_length=10000)
+    atol:float=Field(default=0,ge=0)
+    rtol:float=Field(default=0,ge=0)
+@app.post("/api/projects/{id}/science/{check}")
+def scientific_check(id:int,check:Literal["energy","convergence","sensitivity"],request:ScientificRequest):
+    s=snapshot(id)
+    r=next((r for r in s['runs'] if r['id']==request.run_id),None)
+    if not r or request.metric not in r['series']: raise HTTPException(404,"Unknown run series")
+    values=r['series'][request.metric]
+    try:
+        if any(v is None for v in values): raise ValueError("Missing observations must be resolved explicitly")
+        result=science.energy(values,request.atol,request.rtol) if check=="energy" else science.convergence(request.x,values) if check=="convergence" else science.sensitivity(request.x,values)
+        return {"result":result,"inputs":request.model_dump(),"sources":r.get('metric_sources',{}).get(request.metric,r['sources']),"snapshot_id":id}
+    except ValueError as e: raise HTTPException(422,str(e))
+class PropagationRequest(BaseModel):
+    model_config=ConfigDict(extra="forbid",allow_inf_nan=False)
+    coefficients:List[float]=Field(max_length=100)
+    covariance:List[List[float]]=Field(max_length=100)
+    product_units:List[str]=Field(max_length=100)
+@app.post("/api/science/linear-propagation")
+def linear_propagation(request:PropagationRequest):
+    try: return {"result":science.propagation(request.coefficients,request.covariance,request.product_units),"inputs":request.model_dump(),"basis":"user_supplied"}
+    except ValueError as e: raise HTTPException(422,str(e))
+@app.get("/api/projects/{id}/samples")
+def sample_quality(id:int,path:str):
+    try: return samples.analyze(snapshot(id),path)
+    except (ValueError,OSError) as e: raise HTTPException(422,str(e))
+class EvidenceSource(BaseModel):
+    model_config=ConfigDict(extra="forbid")
+    evidence_id:Optional[str]=None
+    snapshot_id:Optional[int]=None
+    run_id:Optional[str]=None
+    metric:Optional[str]=None
+class EvidenceRequest(BaseModel):
+    kind:Literal["figure","table","claim","experiment"]
+    label:str=Field(min_length=1,max_length=1000)
+    sources:List[EvidenceSource]=Field(min_length=1,max_length=100)
+@app.post("/api/evidence",status_code=201)
+def create_evidence(request:EvidenceRequest):
+    sources=[v.model_dump(exclude_none=True) for v in request.sources]
+    if any(not (('evidence_id' in v and len(v)==1) or ('evidence_id' not in v and 'snapshot_id' in v and 'run_id' in v)) for v in sources): raise HTTPException(422,"Provide evidence_id OR snapshot_id/run_id/optional metric")
+    try:return evidence.add(request.kind,request.label,sources)
+    except (ValueError,KeyError) as e:raise HTTPException(422,str(e))
+@app.get("/api/evidence")
+def research_evidence(): return evidence.listing()
+@app.get("/api/evidence/{evidence_id}/trace")
+def trace_evidence(evidence_id:str):
+    try:return evidence.trace(evidence_id)
+    except KeyError:raise HTTPException(404,"Evidence not found")
+from .tracking.engine import Engine
+_tracker=None
+def tracking_engine():
+    global _tracker
+    target=storage.DB/'tracking.sqlite'
+    if _tracker is None or _tracker.db!=target: _tracker=Engine(target)
+    return _tracker
+class TrackingProject(BaseModel):
+    path:str
+    ignores:List[str]=Field(default_factory=list,max_length=100)
+@app.post("/api/tracking/projects",status_code=201)
+def track_project(request:TrackingProject):
+    try:return {"id":tracking_engine().register(request.path,request.ignores)}
+    except ValueError as e:raise HTTPException(422,str(e))
+@app.get("/api/tracking/health")
+def tracking_health():return tracking_engine().diagnostics()
+@app.post("/api/tracking/reconcile")
+def reconcile_tracking():
+    tracking_engine().scan()
+    return tracking_engine().diagnostics()
+@app.get("/api/tracking/runs/{run_id}/metrics")
+def tracking_metrics(run_id:str):return tracking_engine().observations(run_id)
 if Path("frontend/dist").exists(): app.mount("/",StaticFiles(directory="frontend/dist",html=True),name="ui")

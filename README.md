@@ -69,3 +69,7 @@ metric_definitions:
 ## 后台导入任务
 
 界面导入现在后台执行，显示当前文件、任务状态与阶段内计数，并支持取消。取消在文件操作之间生效；进入 committing 后不再取消。服务重启会把未完成任务标记为 interrupted，可重新发起导入。请使用默认单进程启动方式，不使用 uvicorn 多 worker。任务状态保存在本地 SQLite；现有同步导入 API 保留。
+
+## 本地持续追踪（首个增量版本）
+
+工作台新增 Local Experiment Tracking 面板，注册目录后持续采集 CSV/JSONL。可配置忽略 glob；同一项目下每个运行应使用独立目录。诊断数据保存至 .researchaudit/tracking.sqlite，watchfiles 事件与周期扫描共同校验。大型模型仅登记位置与元数据。详细能力和未完成验收项见 docs/local_tracking_engine.md；基准脚本见 benchmarks/tracking_benchmark.py。当前阶段不是完整 P0/P1/P2 验收版本。

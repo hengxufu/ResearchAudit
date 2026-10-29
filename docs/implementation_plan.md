@@ -44,3 +44,13 @@ Completed durable import-job lifecycle with a single bounded worker, maximum eig
 Acceptance: 16 tests passed in 6.55 seconds. Tests exercise worker completion, cancellation before commit, queued cancellation, failures, recovery and missing-task/commit-state API errors. Frontend build verified. Cancellation is cooperative between file operations; parsing a file is not forcibly terminated. Progress counts are phase-local (discovery/import/MLflow/verification), not an overall percentage. Jobs are designed for one local uvicorn process; multi-worker execution and distributed queues are out of scope.
 
 Next Stage 3 increments: unified duplicate metric handling, TensorBoard tensor/restart coverage, verified dataset manifests, browser interaction acceptance and cache corruption recovery. Stage 4 remains pending; do not interpret this increment as completing all Stage 3 requirements.
+
+## Scientific extensions increment
+
+Implemented API-first energy drift, reference-error convergence, local secant sensitivity, exact linear covariance propagation; classification sample quality from SHA256-verified CSV/Parquet; append-only multi-level declared evidence for figure/table/claim/experiment. 18 tests pass. See scientific_extensions.md for input contracts and scientific limitations.
+
+Still pending: scientific UI, persisted analysis records, artifact bytes/claim expression binding, report evidence integration, bidirectional standards adapters, remote compute, truly large-file importer, nonlinear/Monte Carlo propagation and physical flux models. This increment does not complete Stage 4.
+
+## Local tracking increment
+
+Implemented a separate WAL tracking journal, transactional CSV/JSONL cursor/record/metric batches, registered roots/ignores, watchfiles plus periodic reconciliation, stat-only artifacts, monitor diagnostics, SDK JSONL emitter, initial domain adapter interfaces and SQLite backup. See local_tracking_engine.md for exact scope and remaining P0/P1/P2 gates. 20 tests pass. Do not mark the complete Local Experiment Tracking Engine upgrade accepted: live parser coverage, rotation deduplication, actual crash injection, lifecycle detection and resource limits remain incomplete.
