@@ -1,0 +1,10 @@
+{
+  "name": "Import / audit / figure / report — fill path and metric before running",
+  "description": "Template only. No data or metrics are fabricated. Explicit confirmation is required.",
+  "nodes": [
+    {"id":"import","kind":"import","config":{"path":"REPLACE_WITH_LOCAL_EXPERIMENT_DIRECTORY"},"depends_on":[],"retries":0},
+    {"id":"audit","kind":"audit","config":{"snapshot_id":{"$ref":"import.snapshot_id"}},"depends_on":["import"],"retries":0},
+    {"id":"figure","kind":"figure","config":{"snapshot_id":{"$ref":"import.snapshot_id"},"metric":"REPLACE_WITH_SOURCE_METRIC","format":"svg"},"depends_on":["import"],"retries":0},
+    {"id":"report","kind":"report","config":{"snapshot_id":{"$ref":"import.snapshot_id"}},"depends_on":["import","audit","figure"],"retries":0}
+  ]
+}

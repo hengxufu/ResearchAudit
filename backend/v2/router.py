@@ -93,7 +93,7 @@ def plugin_parse(kind:Literal['deep_learning','pose','simulation'],req:PluginReq
     return {**parsed,'analysis_id':record['id']}
 @router.get('/snapshots/{id}/graph')
 def provenance(id:int):
-    s=guard(storage.get,id);g=graph(s)
+    s=guard(storage.get,id);g=graph(s);g['nodes'].append({'id':'snapshot:'+str(id),'type':'snapshot','attributes':{'label':str(id)}})
     records=evidence.listing();selected={r['id'] for r in records if any(ref.get('snapshot_id')==id for ref in r['sources'])}
     changed=True
     while changed:
@@ -126,7 +126,7 @@ def provenance(id:int):
                 if not refs:continue
                 analysis_ids.append(key);g['nodes'].append({'id':key,'type':'analysis','attributes':{'label':item['method'],'unit':item.get('unit')}})
                 for ref in refs:
-                    origin=ref['run_id']+':'+ref['metric'] if ref.get('metric') else ref['run_id']
+                    origin=ref['run_id']+':'+ref['metric'] if ref.get('run_id') and ref.get('metric') else ref.get('run_id','snapshot:'+str(id))
                     g['edges'].append({'from':origin,'to':key,'type':'computed_from','basis':'persisted_analysis_inputs'})
         if c.execute("SELECT name FROM sqlite_master WHERE name='report_records' AND type='table'").fetchone():
             for key,payload in c.execute('SELECT id,spec FROM report_records WHERE snapshot_id=?',(id,)):

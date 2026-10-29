@@ -1,0 +1,48 @@
+# ResearchAudit 3.0 changed files
+
+Generated from the local Git working tree. Generated test state, node_modules and built assets are ignored; no remote commit/push is implied.
+
+- backend/main.py
+- backend/orchestrator.py
+- backend/v2/router.py
+- backend/v3/__init__.py
+- backend/v3/data_studio.py
+- backend/v3/documents.py
+- backend/v3/environment.py
+- backend/v3/intelligence.py
+- backend/v3/knowledge.py
+- backend/v3/notebooks.py
+- backend/v3/reproduction.py
+- backend/v3/router.py
+- backend/v3/suites.py
+- backend/v3/workflows.py
+- benchmarks/v3_benchmark.py
+- docs/architecture.md
+- docs/implementation_plan.md
+- docs/open_source_research.md
+- docs/v3_acceptance.md
+- docs/v3_api.md
+- docs/v3_architecture.md
+- docs/v3_benchmark_result.json
+- docs/v3_changed_files.md
+- docs/v3_implementation_plan.md
+- docs/v3_user_guide.md
+- docs/workflow_templates/command_statistics_report.json
+- docs/workflow_templates/import_report.json
+- examples/TEST_DATA_simulation.cpp
+- examples/TEST_DATA_train.py
+- frontend/e2e/v3.spec.ts
+- frontend/package-lock.json
+- frontend/package.json
+- frontend/pages/DataStudio.tsx
+- frontend/pages/GraphPanel.tsx
+- frontend/pages/KnowledgePanel.tsx
+- frontend/pages/ReproductionPanel.tsx
+- frontend/pages/ResearchIntelligence.tsx
+- frontend/pages/WorkflowStudio.tsx
+- frontend/src.tsx
+- frontend/style.css
+- pytest.ini
+- README.md
+- requirements.txt
+- tests/test_v3.py

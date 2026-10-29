@@ -1,0 +1,10 @@
+{
+  "name": "Explicit command / statistics / audit / report — configure before running",
+  "description": "Fill a trusted executable, working directory and metric. Command must write to RESEARCHAUDIT_OUTPUT_DIR. This configuration never starts without explicit confirmation.",
+  "nodes": [
+    {"id":"train","kind":"command","config":{"argv":["REPLACE_WITH_TRUSTED_EXECUTABLE","REPLACE_WITH_SCRIPT"],"cwd":"REPLACE_WITH_WORKING_DIRECTORY","timeout_seconds":3600},"depends_on":[],"retries":0},
+    {"id":"statistics","kind":"describe","config":{"snapshot_id":{"$ref":"train.snapshot_id"},"run_id":{"$ref":"train.runs.0.run_id"},"metric":"REPLACE_WITH_SOURCE_METRIC"},"depends_on":["train"],"retries":0},
+    {"id":"audit","kind":"audit","config":{"snapshot_id":{"$ref":"train.snapshot_id"}},"depends_on":["train"],"retries":0},
+    {"id":"report","kind":"report","config":{"snapshot_id":{"$ref":"train.snapshot_id"}},"depends_on":["train","statistics","audit"],"retries":0}
+  ]
+}

@@ -1,6 +1,8 @@
-# ResearchAudit 2.0 development workbench
+# ResearchAudit 3.0 development workbench
 
-ResearchAudit is a local-first scientific experiment workbench. The current version is **2.0.0-dev.0**, not a claim that every production acceptance gate is complete. It runs real commands, imports real files and stores auditable results. It does not upload research data automatically.
+ResearchAudit is a local-first scientific experiment workbench. The current version is **3.0.0-dev.0**, a verified development increment with explicit experiment replay, executable workflows, bounded scientific data browsing and versioned research knowledge. It is not a claim that every 3.0 roadmap gate is complete. It runs real commands, imports real files and stores auditable results. It does not upload research data automatically.
+
+Start with [the v3 user guide](docs/v3_user_guide.md), [architecture](docs/v3_architecture.md), [API contracts](docs/v3_api.md), [phased plan](docs/v3_implementation_plan.md) and [acceptance/remaining work](docs/v3_acceptance.md). The nine existing pages and older API contracts remain available.
 
 ## Install and start
 
@@ -77,7 +79,7 @@ npm run test:e2e
 
 For Chromium instead, run `npx playwright install chromium` and omit PW_BROWSER_CHANNEL. E2E creates an isolated database, starts localhost, launches a controlled TEST DATA program and verifies navigation, execution, statistics, figures, audit, PDF download and ZIP integrity. On a restricted Windows sandbox, choose a fresh workspace `--basetemp .test-runs-<unique-name>` for pytest; test rename permissions can differ from user temp directories.
 
-Benchmarks: `benchmarks/v2_benchmark.py` and `benchmarks/v2_result.json`. All benchmark/fixture data are explicitly TEST DATA. See docs/v2_acceptance.md for measured results and remaining limits.
+Benchmarks: `benchmarks/v3_benchmark.py` and `docs/v3_benchmark_result.json`; the v2 benchmark is also retained. All benchmark/fixture data are explicitly TEST DATA. See docs/v3_acceptance.md for measured results and remaining limits.
 
 ## Engineering documentation
 
@@ -86,3 +88,8 @@ Benchmarks: `benchmarks/v2_benchmark.py` and `benchmarks/v2_result.json`. All be
 - docs/v2_acceptance.md: coverage, benchmark conditions and uncompleted requirements.
 - docs/open_source_research.md: source research and license notes.
 - docs/local_tracking_engine.md and docs/lifecycle_upgrade.md: historical implementation records; newer v2 documents supersede their status statements.
+- docs/v3_architecture.md: current modules, data model, additive migration and recovery semantics.
+- docs/v3_api.md: reproduction, workflow, data, suites, diagnostics and knowledge contracts.
+- docs/v3_user_guide.md: operations, controlled examples and workflow templates.
+- docs/v3_acceptance.md: measured tests, benchmarks and explicit limitations.
+- docs/v3_implementation_plan.md: phased progress and remaining priorities.

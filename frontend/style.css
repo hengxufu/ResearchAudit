@@ -335,3 +335,63 @@ section .flex {
   font-size: 10px;
   overflow-wrap: anywhere;
 }
+/* v3 tools keep the existing workbench palette and keyboard-native controls. */
+.workflow-nodes {
+  display: flex;
+  gap: 12px;
+  overflow: auto;
+  padding: 12px 0;
+}
+.workflow-node {
+  border: 1px solid var(--line, #cbd5e1);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 285px;
+  flex: 1;
+}
+.workflow-node label {
+  display: block;
+  margin: 8px 0;
+}
+.workflow-node textarea {
+  min-height: 125px;
+  width: 100%;
+  font-family: monospace;
+}
+.node-status {
+  display: inline-block;
+  margin: 4px;
+  padding: 4px 7px;
+  border: 1px solid #94a3b8;
+  border-radius: 5px;
+}
+.scorecard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 14px 0;
+}
+.scorecard > div {
+  padding: 12px;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 170px;
+  overflow-wrap: anywhere;
+}
+.table-scroll {
+  overflow: auto;
+}
+section > label {
+  display: block;
+  margin: 12px 0;
+}
+section > label > textarea {
+  display: block;
+  width: 100%;
+  min-height: 75px;
+}
+section > details > textarea {
+  width: 100%;
+  min-height: 120px;
+}

@@ -1,5 +1,7 @@
 # Implementation plan and acceptance
 
+Historical initial plan; status statements below describe that stage. See [v3_implementation_plan.md](v3_implementation_plan.md) and [v3_acceptance.md](v3_acceptance.md) for current verified scope and remaining work.
+
 ## Stage 0 — inspection and source review
 
 Completed initial repository inspection and focused GitHub source review. See open_source_research.md for verified mechanisms, licenses and unconfirmed areas. noWorkflow collector and detailed frontend/storage internals remain research work.

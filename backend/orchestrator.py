@@ -6,9 +6,9 @@ from .collect import git,scan
 from . import storage
 TERMINAL={'Succeeded','Failed','Cancelled','Interrupted'}
 class Orchestrator:
-    def __init__(self,home,concurrency=2):
+    def __init__(self,home,concurrency=2,on_enqueue=None):
         self.home=Path(home).resolve();self.home.mkdir(parents=True,exist_ok=True)
-        self.limit=concurrency;self.lock=threading.RLock();self.processes={};self.workers={};self.stop_event=threading.Event();self.thread=None
+        self.limit=concurrency;self.on_enqueue=on_enqueue;self.lock=threading.RLock();self.processes={};self.workers={};self.stop_event=threading.Event();self.thread=None
         with self.connect() as c:
             c.execute('CREATE TABLE IF NOT EXISTS execution_runs(id TEXT PRIMARY KEY,state TEXT,spec TEXT,created REAL,started REAL,finished REAL,exit_code INTEGER,pid INTEGER,snapshot_id INTEGER,error TEXT)')
     def connect(self):
@@ -32,6 +32,8 @@ class Orchestrator:
     def enqueue(self,id):
         with self.lock:
             if self.get(id)['state']!='Pending':raise ValueError('Only Pending runs can be queued; use rerun for terminal runs')
+            if self.on_enqueue:
+                folder=self.home/'runs'/id;folder.mkdir(parents=True,exist_ok=True);self.on_enqueue(str(folder))
             self.change(id,state='Queued')
         return self.get(id)
     def cancel(self,id,final_state="Cancelled",reason=None):
@@ -74,6 +76,8 @@ class Orchestrator:
         try:
             run=self.get(id);spec=run['spec'];env=os.environ.copy();env.update(spec.get('env',{}));env['RESEARCHAUDIT_OUTPUT_DIR']=str(folder);env['RESEARCHAUDIT_RUN_ID']=id;env.setdefault('PYTHONIOENCODING','utf-8');env.setdefault('PYTHONUNBUFFERED','1')
             metadata={**spec.get('params',{}),'execution_id':id,'argv':spec['argv'],'cwd':spec['cwd'],'params':spec.get('params',{}),'git_commit':git(spec['cwd'],'rev-parse','HEAD'),'git_status':git(spec['cwd'],'status','--porcelain'),'runner_python':platform.python_version(),'environment_capture_scope':'Runner metadata, not a complete target dependency lock','platform':platform.platform(),'environment_keys':sorted(spec.get('env',{}))}
+            from .v3.environment import capture
+            metadata['environment_manifest']=capture(spec['cwd'],spec['argv'],spec.get('code_files',[]))
             (folder/'config.json').write_text(json.dumps({**spec.get('params',{}),'researchaudit_execution':metadata},indent=2),encoding='utf-8')
             with (folder/'stdout.log').open('wb') as stdout,(folder/'stderr.log').open('wb') as stderr:
                 with self.lock:

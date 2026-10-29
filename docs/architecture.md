@@ -1,5 +1,7 @@
 # Architecture and decision record
 
+Historical initial architecture. Current additive v3 architecture and migration contracts are in [v3_architecture.md](v3_architecture.md); v2_architecture.md preserves the 2.0 decision record.
+
 ## Current system and migration
 
 Keep React/TypeScript/Tailwind/Plotly, FastAPI, Polars and SQLite. The initial repository had one integration test, JSON snapshot storage, synchronous directory scans, scalar metrics and unstructured audit text. This change adds YAML parsing, deterministic run IDs, snapshot deduplication, metric contracts and registered audit rules without deleting old snapshots.

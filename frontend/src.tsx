@@ -1,6 +1,11 @@
 import { GlobalSearch } from "./pages/GlobalSearch";
 import { InferencePanel } from "./pages/InferencePanel";
 import { RegistryPanel } from "./pages/RegistryPanel";
+import { ReproductionPanel } from "./pages/ReproductionPanel";
+import { WorkflowStudio } from "./pages/WorkflowStudio";
+import { DataStudio } from "./pages/DataStudio";
+import { ResearchIntelligence } from "./pages/ResearchIntelligence";
+import { KnowledgePanel } from "./pages/KnowledgePanel";
 import React, { useEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { ExecutionPanel } from "./ExecutionPanel";
@@ -75,7 +80,7 @@ function App() {
     <div className="workbench">
       <aside className="navigation">
         <div className="brand">
-          ◈ ResearchAudit <small>2.0 development</small>
+          ◈ ResearchAudit <small>3.0 development</small>
         </div>
         <input
           aria-label="Global navigation search"
@@ -145,16 +150,21 @@ function App() {
             <Importer onDone={open} />
             <RegistryPanel snapshot={snapshot} id={id} />
             <Assets />
+            <DataStudio />
             <PluginPanel />
           </>
         )}
         {page === "executions" && (
-          <ExecutionPanel
-            onSnapshot={(n) => {
-              open(n);
-              P("analysis");
-            }}
-          />
+          <>
+            <ExecutionPanel
+              onSnapshot={(n) => {
+                open(n);
+                P("analysis");
+              }}
+            />
+            <ReproductionPanel />
+            <WorkflowStudio />
+          </>
         )}
         {page === "runs" && (
           <HistoryPanel
@@ -181,12 +191,22 @@ function App() {
                 <BatchPanel snapshot={snapshot} id={id} />
                 <InferencePanel key={id} snapshot={snapshot} id={id} />
                 <PluginPanel />
+                <ResearchIntelligence
+                  key={"intelligence" + id}
+                  snapshot={snapshot}
+                  id={id}
+                />
               </>
             )}
             {page === "figures" && (
               <FigureStudio key={id} snapshot={snapshot} id={id} />
             )}
-            {page === "provenance" && <GraphPanel id={id} />}
+            {page === "provenance" && (
+              <>
+                <GraphPanel id={id} />
+                <KnowledgePanel snapshotId={id} />
+              </>
+            )}
             {page === "audit" && <AuditPanel key={id} id={id} />}
             {page === "reports" && (
               <section>

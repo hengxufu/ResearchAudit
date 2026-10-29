@@ -17,11 +17,14 @@ async def lifespan(app):
     app.state.tracker.start()
     app.state.orchestrator=execution_engine()
     app.state.orchestrator.start()
+    from .v3.router import workflow_engine
+    app.state.workflows=workflow_engine();app.state.workflows.recover()
     try: yield
     finally:
+        app.state.workflows.stop()
         app.state.orchestrator.stop()
         app.state.tracker.stop()
-app=FastAPI(lifespan=lifespan,title="ResearchAudit",version="2.0.0-dev.0")
+app=FastAPI(lifespan=lifespan,title="ResearchAudit",version="3.0.0-dev.0")
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 app.add_middleware(TrustedHostMiddleware,allowed_hosts=['127.0.0.1','localhost','[::1]','testserver'])
 @app.middleware('http')
@@ -230,7 +233,7 @@ _executor=None
 def execution_engine():
     global _executor
     target=(storage.DB/'execution').resolve()
-    if _executor is None or _executor.home!=target:_executor=Orchestrator(target)
+    if _executor is None or _executor.home!=target:_executor=Orchestrator(target,on_enqueue=lambda folder:tracking_engine().register(folder))
     return _executor
 class ExecutionSpec(BaseModel):
     model_config=ConfigDict(extra="forbid",allow_inf_nan=False)
@@ -243,6 +246,7 @@ class ExecutionSpec(BaseModel):
     timeout_seconds:float=Field(default=3600,gt=0,le=604800)
     soft_memory_mb:Optional[float]=Field(default=None,gt=0,le=1048576)
     log_limit_mb:float=Field(default=100,gt=0,le=10240)
+    code_files:List[str]=Field(default_factory=list,max_length=50)
 @app.post("/api/executions",status_code=201)
 def create_execution(spec:ExecutionSpec):
     try:return execution_engine().create(spec.model_dump())
@@ -325,4 +329,6 @@ def execution_grid(request:GridExecution):
     return {"runs":created,"state":"Pending","note":"Explicit start required for every generated run"}
 from .v2.router import router as v2_router
 app.include_router(v2_router)
+from .v3.router import router as v3_router
+app.include_router(v3_router)
 if Path("frontend/dist").exists(): app.mount("/",StaticFiles(directory="frontend/dist",html=True),name="ui")

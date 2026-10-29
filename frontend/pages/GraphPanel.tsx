@@ -6,7 +6,7 @@ export function GraphPanel({ id }: { id: number }) {
     [selected, X] = useState<any>(null),
     [error, E] = useState("");
   useEffect(() => {
-    api("/v2/snapshots/" + id + "/graph")
+    api("/v3/snapshots/" + id + "/graph")
       .then(S)
       .catch((e) => E(String(e)));
   }, [id]);
@@ -25,6 +25,18 @@ export function GraphPanel({ id }: { id: number }) {
     <section>
       <h3>Observed / declared provenance</h3>
       <p>{data.scope} · 显示前 100 个节点；点击查看原始证据。</p>
+      <button
+        onClick={() =>
+          api("/v3/snapshots/" + id + "/graph")
+            .then((v) => {
+              S(v);
+              X(null);
+            })
+            .catch((e) => E(String(e)))
+        }
+      >
+        Refresh evidence graph / 刷新证据图
+      </button>
       <div className="graph-scroll">
         <svg
           width="940"
