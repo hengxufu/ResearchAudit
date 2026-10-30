@@ -9,3 +9,5 @@ __pycache__/
 frontend/test-results/
 frontend/playwright-report/
 output/pdf/TEST_DATA-*
+tests/
+output/
