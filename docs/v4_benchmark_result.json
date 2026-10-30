@@ -1,0 +1,19 @@
+{
+  "platform": "Windows-10-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+  "logical_cpus": 24,
+  "python": "3.9.13",
+  "files": 1001,
+  "stat_only_sparse_model_logical_bytes": 1073741824,
+  "project_discovery_seconds": 0.6321050000000001,
+  "observations": 30,
+  "gp_pool": 512,
+  "gp_suggest_5_seconds": 0.1742455000000005,
+  "parent_cpu_seconds": 0.5625,
+  "parent_rss_before": 94322688,
+  "parent_rss_after": 108871680,
+  "parent_io_read_bytes": 1335801,
+  "parent_io_write_bytes": 561287,
+  "persistent_bytes": 202515,
+  "conditions": "TEST DATA only, warm local desktop, one run; sparse 1 GiB model is stat-only test not dense throughput; generation excluded, parent counters not physical disk, no peak/endurance claim"
+}

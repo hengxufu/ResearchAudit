@@ -13,6 +13,9 @@ def save(kind,payload,id=None,expected_revision=0):
     with storage.connect() as c:
         setup(c);c.execute('BEGIN IMMEDIATE')
         c.execute('INSERT OR IGNORE INTO schema_migrations(version) VALUES (3)')
+        if kind in ('project_intelligence','project_backfill','optimization','environment_declaration','environment_comparison','figure_recipe'):
+            c.execute('CREATE TABLE IF NOT EXISTS optimization_dispatch(proposal_id TEXT,candidate INTEGER,state TEXT,execution_id TEXT,spec TEXT,PRIMARY KEY(proposal_id,candidate))')
+            c.execute('INSERT OR IGNORE INTO schema_migrations(version) VALUES (4)')
         current=c.execute('SELECT COALESCE(MAX(revision),0) FROM research_documents WHERE kind=? AND id=?',(kind,id)).fetchone()[0]
         if current!=expected_revision:raise ValueError('Revision conflict')
         revision=current+1;c.execute('INSERT INTO research_documents VALUES (?,?,?,?,?,?)',(kind,id,revision,time.time(),encoded,hashlib.sha256(encoded.encode()).hexdigest()))

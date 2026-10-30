@@ -24,7 +24,7 @@ async def lifespan(app):
         app.state.workflows.stop()
         app.state.orchestrator.stop()
         app.state.tracker.stop()
-app=FastAPI(lifespan=lifespan,title="ResearchAudit",version="3.0.0-dev.0")
+app=FastAPI(lifespan=lifespan,title="ResearchAudit",version="4.0.0-dev.0")
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 app.add_middleware(TrustedHostMiddleware,allowed_hosts=['127.0.0.1','localhost','[::1]','testserver'])
 @app.middleware('http')
@@ -331,4 +331,6 @@ from .v2.router import router as v2_router
 app.include_router(v2_router)
 from .v3.router import router as v3_router
 app.include_router(v3_router)
+from .v4.router import router as v4_router
+app.include_router(v4_router)
 if Path("frontend/dist").exists(): app.mount("/",StaticFiles(directory="frontend/dist",html=True),name="ui")

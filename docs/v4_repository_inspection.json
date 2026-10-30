@@ -1,0 +1,13 @@
+{
+  "root": "D:\\ResearchAudit",
+  "structures": [
+    "C++",
+    "Python"
+  ],
+  "truncated": false,
+  "issues": [],
+  "indexed_files": 147,
+  "candidate_directories": 1,
+  "source_scope": "Actual ResearchAudit working tree, read-only static discovery; no project command executed",
+  "git_commit": "256030679de960600ab451c9e53a47b28dae5623"
+}

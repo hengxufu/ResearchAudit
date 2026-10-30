@@ -1,4 +1,9 @@
 import { GlobalSearch } from "./pages/GlobalSearch";
+import {
+  ProjectIntelligence,
+  AdvancedResearch,
+  MultipanelStudio,
+} from "./pages/PlatformV4";
 import { InferencePanel } from "./pages/InferencePanel";
 import { RegistryPanel } from "./pages/RegistryPanel";
 import { ReproductionPanel } from "./pages/ReproductionPanel";
@@ -80,7 +85,7 @@ function App() {
     <div className="workbench">
       <aside className="navigation">
         <div className="brand">
-          ◈ ResearchAudit <small>3.0 development</small>
+          ◈ ResearchAudit <small>4.0 development</small>
         </div>
         <input
           aria-label="Global navigation search"
@@ -148,6 +153,7 @@ function App() {
         {page === "projects" && (
           <>
             <Importer onDone={open} />
+            <ProjectIntelligence />
             <RegistryPanel snapshot={snapshot} id={id} />
             <Assets />
             <DataStudio />
@@ -188,6 +194,7 @@ function App() {
             {page === "analysis" && (
               <>
                 <AnalysisPanel key={id} snapshot={snapshot} id={id} />
+                <AdvancedResearch key={"v4" + id} snapshot={snapshot} id={id} />
                 <BatchPanel snapshot={snapshot} id={id} />
                 <InferencePanel key={id} snapshot={snapshot} id={id} />
                 <PluginPanel />
@@ -199,7 +206,14 @@ function App() {
               </>
             )}
             {page === "figures" && (
-              <FigureStudio key={id} snapshot={snapshot} id={id} />
+              <>
+                <FigureStudio key={id} snapshot={snapshot} id={id} />
+                <MultipanelStudio
+                  key={"multi" + id}
+                  snapshot={snapshot}
+                  id={id}
+                />
+              </>
             )}
             {page === "provenance" && (
               <>
