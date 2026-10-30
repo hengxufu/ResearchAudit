@@ -5,6 +5,7 @@ frontend/dist/
 __pycache__/
 .pytest_cache/
 .test-runs-*/
+.artifacts/
 frontend/test-results/
 frontend/playwright-report/
 output/pdf/TEST_DATA-*

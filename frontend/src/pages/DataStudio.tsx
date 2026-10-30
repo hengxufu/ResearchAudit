@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, post, Json } from "./shared";
+import { api, post, Json } from "../shared/api";
 export function DataStudio() {
   const [assets, A] = useState<any[]>([]),
     [asset, I] = useState(""),

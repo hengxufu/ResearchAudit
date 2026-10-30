@@ -2,7 +2,7 @@
 import hashlib,importlib.metadata,platform,re,sys
 from pathlib import Path
 import yaml
-from ..v3 import documents
+from ..core import documents
 
 def runner():
     packages={}

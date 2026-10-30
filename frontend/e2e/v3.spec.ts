@@ -16,7 +16,13 @@ test("TEST DATA: v3 reproduction, workflow editor, data studio and claim evidenc
       ".venv",
       process.platform === "win32" ? "Scripts/python.exe" : "bin/python",
     );
-  const directory = path.join(root, ".test-runs-" + randomUUID(), "TEST_DATA");
+  const directory = path.join(
+    root,
+    ".artifacts",
+    "test-runs",
+    randomUUID(),
+    "TEST_DATA",
+  );
   await fs.mkdir(directory, { recursive: true });
   await fs.writeFile(path.join(directory, "metrics.csv"), "loss\n3\n1\n");
   const params = {
@@ -58,14 +64,12 @@ test("TEST DATA: v3 reproduction, workflow editor, data studio and claim evidenc
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto("/");
   await page.getByRole("button", { name: "实验执行中心", exact: true }).click();
-  const replay = page
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Experiment reproduction / 实验复现",
-        exact: true,
-      }),
-    });
+  const replay = page.locator("section").filter({
+    has: page.getByRole("heading", {
+      name: "Experiment reproduction / 实验复现",
+      exact: true,
+    }),
+  });
   await replay.getByLabel("Reproduction source").selectOption(original.id);
   await replay
     .getByLabel("Reproduction tolerances")
@@ -106,14 +110,12 @@ test("TEST DATA: v3 reproduction, workflow editor, data studio and claim evidenc
     "result_consistency",
   );
   await expect(replay.locator(".scorecard .PASS")).toHaveCount(3);
-  const studio = page
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Research Workflow Studio / 工作流编排",
-        exact: true,
-      }),
-    });
+  const studio = page.locator("section").filter({
+    has: page.getByRole("heading", {
+      name: "Research Workflow Studio / 工作流编排",
+      exact: true,
+    }),
+  });
   await studio
     .getByRole("button", {
       name: "Import/report template / 导入报告模板",
@@ -123,15 +125,13 @@ test("TEST DATA: v3 reproduction, workflow editor, data studio and claim evidenc
   await studio
     .getByLabel("Node config import")
     .fill(JSON.stringify({ path: directory }));
-  await studio
-    .getByLabel("Node config figure")
-    .fill(
-      JSON.stringify({
-        snapshot_id: { $ref: "import.snapshot_id" },
-        metric: "loss",
-        format: "svg",
-      }),
-    );
+  await studio.getByLabel("Node config figure").fill(
+    JSON.stringify({
+      snapshot_id: { $ref: "import.snapshot_id" },
+      metric: "loss",
+      format: "svg",
+    }),
+  );
   await studio
     .getByRole("button", { name: "Save workflow / 保存版本", exact: true })
     .click();
@@ -152,7 +152,13 @@ test("TEST DATA: v3 reproduction, workflow editor, data studio and claim evidenc
     (await fs.readFile((await download.path())!)).subarray(0, 4).toString(),
   ).toBe("%PDF");
   await page.screenshot({
-    path: "test-results/workflows-v3.png",
+    path: path.join(
+      root,
+      ".artifacts",
+      "browser",
+      "screenshots",
+      "workflows-v3.png",
+    ),
     fullPage: true,
   });
   const asset = await (
@@ -163,14 +169,12 @@ test("TEST DATA: v3 reproduction, workflow editor, data studio and claim evidenc
   await page
     .getByRole("button", { name: "项目与数据资产", exact: true })
     .click();
-  const data = page
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Research Data Studio / 科研数据浏览",
-        exact: true,
-      }),
-    });
+  const data = page.locator("section").filter({
+    has: page.getByRole("heading", {
+      name: "Research Data Studio / 科研数据浏览",
+      exact: true,
+    }),
+  });
   await data
     .getByRole("button", { name: "Refresh assets", exact: true })
     .click();

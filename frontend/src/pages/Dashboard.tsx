@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { api, post, Json, usePoll } from "./shared";
-import { TrackingPanel } from "../TrackingPanel";
+import { api, post, Json, usePoll } from "../shared/api";
+import { TrackingPanel } from "../components/TrackingPanel";
 export function Dashboard() {
   const { value, error } = usePoll("/v2/overview");
   const resources = usePoll("/v2/resources");

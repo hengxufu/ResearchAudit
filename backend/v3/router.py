@@ -4,8 +4,9 @@ from typing import List,Optional,Literal,Dict
 from fastapi import APIRouter,HTTPException,Query
 from fastapi.responses import Response
 from pydantic import Field
-from ..v2.router import Strict,guard,executor,RunRef,MetricRef
-from . import documents,reproduction,data_studio,suites,intelligence,knowledge,workflows
+from ..api.common import Strict,guard,executor,RunRef,MetricRef
+from ..core import documents
+from . import reproduction,data_studio,suites,intelligence,knowledge,workflows
 router=APIRouter(prefix='/api/v3',tags=['ResearchAudit 3'])
 _workflow=None
 def workflow_engine():

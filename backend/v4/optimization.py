@@ -5,7 +5,7 @@ from scipy.linalg import cho_factor,cho_solve
 from scipy.special import ndtr
 from .. import storage,statistics_engine
 from ..analysis import compatibility
-from ..v3 import documents
+from ..core import documents
 LOCK=threading.RLock()
 
 def propose(refs,metric,space,algorithm,count,budget,seed,constraints):

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { api, post, Json, usePoll } from "./shared";
-import { TrackingPanel } from "../TrackingPanel";
+import { api, post, Json, usePoll } from "../shared/api";
+import { TrackingPanel } from "../components/TrackingPanel";
 export function FigureStudio({ snapshot, id }: { snapshot: any; id: number }) {
   const [metric, M] = useState(""),
     [kind, K] = useState("curve"),

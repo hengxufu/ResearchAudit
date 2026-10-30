@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from ..figures import LOCK
 from .. import statistics_engine as registry
-from ..v3 import documents
+from ..core import documents
 
 def save(panels,title):
     for panel in panels:

@@ -5,7 +5,7 @@ Restart marks an unfinished workflow Interrupted rather than replaying side effe
 """
 import copy,json,re,threading,time,uuid
 from pathlib import Path
-from . import documents
+from ..core import documents
 from .. import storage,statistics_engine
 
 KINDS={'command','import','describe','batch','audit','figure','report','balance','asset_verify'}

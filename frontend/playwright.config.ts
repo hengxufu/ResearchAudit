@@ -14,6 +14,7 @@ const python =
   );
 export default defineConfig({
   testDir: "./e2e",
+  outputDir: path.join(root, ".artifacts", "browser", "results"),
   timeout: 60000,
   workers: 1,
   reporter: "list",
@@ -32,7 +33,9 @@ export default defineConfig({
     env: {
       RESEARCHAUDIT_HOME: path.join(
         root,
-        ".test-runs-" + randomUUID(),
+        ".artifacts",
+        "test-runs",
+        randomUUID(),
         "e2e-db",
       ),
     },

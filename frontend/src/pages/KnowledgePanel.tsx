@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, post, Json } from "./shared";
+import { api, post, Json } from "../shared/api";
 export function KnowledgePanel({ snapshotId }: { snapshotId: number }) {
   const [records, R] = useState<any[]>([]),
     [selected, I] = useState<any>(null),

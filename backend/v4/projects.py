@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 from ..collect import git,scan,SKIP
 from .. import storage
-from ..v3 import documents
+from ..core import documents
 
 def inspect(root,ignores=None,max_files=20000):
     root=Path(root).resolve()

@@ -12,12 +12,10 @@ import { DataStudio } from "./pages/DataStudio";
 import { ResearchIntelligence } from "./pages/ResearchIntelligence";
 import { KnowledgePanel } from "./pages/KnowledgePanel";
 import React, { useEffect, useState, useRef } from "react";
-import { createRoot } from "react-dom/client";
-import { ExecutionPanel } from "./ExecutionPanel";
-import { HistoryPanel } from "./HistoryPanel";
-import { AnalysisPanel } from "./AnalysisPanel";
-import { api, post, Json } from "./pages/shared";
-import "./style.css";
+import { ExecutionPanel } from "./components/ExecutionPanel";
+import { HistoryPanel } from "./components/HistoryPanel";
+import { AnalysisPanel } from "./components/AnalysisPanel";
+import { api, post, Json } from "./shared/api";
 import { Dashboard } from "./pages/Dashboard";
 import { Assets } from "./pages/Assets";
 import { Importer } from "./pages/Importer";
@@ -37,7 +35,7 @@ const pages = [
   ["audit", "科研审计", "Audit Center"],
   ["reports", "报告与成果", "Report Center"],
 ];
-function App() {
+export default function App() {
   const [page, P] = useState("dashboard"),
     [en, L] = useState(false),
     [theme, T] = useState(localStorage.getItem("ra-theme") || "light"),
@@ -255,4 +253,3 @@ function App() {
     </div>
   );
 }
-createRoot(document.getElementById("root")!).render(<App />);

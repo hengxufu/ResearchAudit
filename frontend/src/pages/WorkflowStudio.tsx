@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, post, Json, usePoll } from "./shared";
+import { api, post, Json, usePoll } from "../shared/api";
 type Node = {
   id: string;
   kind: string;

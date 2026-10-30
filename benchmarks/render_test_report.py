@@ -6,7 +6,8 @@ import tempfile
 from backend import storage
 from backend.v2.reporting import pdf
 old=storage.DB
-with tempfile.TemporaryDirectory(dir='.',prefix='.test-runs-pdf-') as tmp:
+from benchmarks.paths import temporary_root
+with tempfile.TemporaryDirectory(dir=temporary_root(),prefix='.test-runs-pdf-') as tmp:
     storage.DB=Path(tmp)
     value={'root':'TEST DATA / 科研测试','runs':[{'id':'TEST','name':'TEST 温度场验证','params':{},'metrics':{'temperature_error_K':.125,'relative_energy_residual':.00001},'series':{},'sources':[{'path':'TEST_DATA/temperature.csv','sha256':'a'*64,'bytes':100}]}],'evidence':[],'issues':[],'git':{'commit':None,'status':None}}
     id=storage.save(value['root'],value)

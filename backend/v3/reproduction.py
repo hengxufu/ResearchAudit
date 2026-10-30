@@ -3,7 +3,7 @@ import hashlib,json,math,threading,shutil
 from pathlib import Path
 import numpy as np
 from scipy import stats
-from . import documents
+from ..core import documents
 from .. import storage
 from ..v2 import assets
 launch_lock=threading.RLock()

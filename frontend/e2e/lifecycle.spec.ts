@@ -70,7 +70,13 @@ test("TEST DATA: nine-page workbench and real experiment lifecycle", async ({
     .click();
   await expect(page.getByText("Analysis ID:", { exact: false })).toBeVisible();
   await page.screenshot({
-    path: "test-results/analysis-v2.png",
+    path: path.join(
+      root,
+      ".artifacts",
+      "browser",
+      "screenshots",
+      "analysis-v2.png",
+    ),
     fullPage: false,
   });
   await page.getByRole("button", { name: "科研绘图", exact: true }).click();
@@ -101,7 +107,13 @@ test("TEST DATA: nine-page workbench and real experiment lifecycle", async ({
   );
   expect(verified.status).toBe("PASS");
   await page.screenshot({
-    path: "test-results/workbench-v2.png",
+    path: path.join(
+      root,
+      ".artifacts",
+      "browser",
+      "screenshots",
+      "workbench-v2.png",
+    ),
     fullPage: true,
   });
   expect(errors).toEqual([]);

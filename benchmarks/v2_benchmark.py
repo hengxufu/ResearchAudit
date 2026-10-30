@@ -6,7 +6,8 @@ import psutil
 from backend import storage,history
 from backend.orchestrator import Orchestrator
 p=psutil.Process();before=p.io_counters();cpu=time.process_time();old=storage.DB
-with tempfile.TemporaryDirectory(dir=str(Path(__file__).resolve().parents[1]),prefix='.test-runs-benchmark-') as tmp:
+from benchmarks.paths import temporary_root
+with tempfile.TemporaryDirectory(dir=temporary_root(),prefix='.test-runs-benchmark-') as tmp:
     storage.DB=Path(tmp)/'state'
     try:
         runs=[{'id':'TEST-RUN-'+str(i),'name':'TEST-'+str(i),'params':{'seed':i},'metrics':{'loss':float(i)},'series':{'loss':[float(v) for v in range(100)]},'sources':[]} for i in range(1100)]

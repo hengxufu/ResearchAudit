@@ -10,14 +10,7 @@ from ..provenance import graph
 from . import assets,analysis,audit,plugins
 from .telemetry import gpu_status
 router=APIRouter(prefix='/api/v2',tags=['ResearchAudit 2'])
-class Strict(BaseModel):model_config=ConfigDict(extra='forbid',allow_inf_nan=False)
-def guard(fn,*args,**kwargs):
-    try:return fn(*args,**kwargs)
-    except KeyError as e:raise HTTPException(404,str(e))
-    except (ValueError,TypeError,OSError) as e:raise HTTPException(422,str(e))
-def executor():
-    from ..main import execution_engine
-    return execution_engine()
+from ..api.common import Strict,guard,executor,RunRef,MetricRef
 @router.get('/overview')
 def overview():
     runs=executor().listing(500);snapshots=storage.listing()
@@ -38,10 +31,6 @@ def asset_versions(id:str):return guard(assets.versions,id)
 def asset_verify(id:str):return guard(assets.verify,id)
 @router.get('/asset-versions/compare')
 def asset_compare(left:str,right:str):return guard(assets.compare,left,right)
-class RunRef(Strict):
-    snapshot_id:int
-    run_id:str
-class MetricRef(RunRef):metric:str
 class BatchAnalysis(Strict):
     refs:List[RunRef]=Field(min_length=1,max_length=1000)
     group_by:List[str]=Field(default_factory=lambda:['model_version','dataset'],max_length=20)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, post, Json, usePoll } from "./shared";
+import { api, post, Json, usePoll } from "../shared/api";
 export function ReproductionPanel() {
   const { value: runs } = usePoll("/executions");
   const [records, R] = useState<any[]>([]),

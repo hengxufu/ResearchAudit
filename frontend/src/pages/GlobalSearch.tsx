@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "./shared";
+import { api } from "../shared/api";
 export function GlobalSearch({
   query,
   onOpen,

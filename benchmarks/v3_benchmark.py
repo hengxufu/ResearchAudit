@@ -9,9 +9,11 @@ from backend.v2 import assets
 from backend.v3 import data_studio,workflows
 from backend.orchestrator import Orchestrator
 
+from benchmarks.paths import temporary_root
+
 def main():
     process=psutil.Process();old=storage.DB
-    with tempfile.TemporaryDirectory(dir=str(Path(__file__).resolve().parents[1]),prefix='.test-runs-v3-benchmark-') as temp:
+    with tempfile.TemporaryDirectory(dir=temporary_root(),prefix='.test-runs-v3-benchmark-') as temp:
         root=Path(temp);storage.DB=root/'state';storage.DB.mkdir()
         rng=np.random.default_rng(7)
         # Dense 32 MB HDF5 on disk, produced in chunks rather than a sparse logical file.

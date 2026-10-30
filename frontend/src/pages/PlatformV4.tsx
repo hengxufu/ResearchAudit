@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api, post, Json } from "./shared";
+import { api, post, Json } from "../shared/api";
 export function ProjectIntelligence() {
   const [path, P] = useState(""),
     [documents, D] = useState<any[]>([]),

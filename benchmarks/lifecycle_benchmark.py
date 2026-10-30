@@ -5,7 +5,8 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from backend import storage
 from backend.orchestrator import Orchestrator
 tracemalloc.start()
-with tempfile.TemporaryDirectory() as tmp:
+from benchmarks.paths import temporary_root
+with tempfile.TemporaryDirectory(dir=temporary_root()) as tmp:
     previous=storage.DB;storage.DB=Path(tmp)/'db'
     try:
         runs=[{'id':f'TEST-{i}','name':f'TEST-{i}','params':{'seed':i},'metrics':{'loss':float(i)},'series':{'loss':[float(j) for j in range(100)]},'sources':[]} for i in range(1000)]

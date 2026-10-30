@@ -1,5 +1,5 @@
 """Versioned Claim–Evidence records. Evidence existence is not claim validation."""
-from . import documents
+from ..core import documents
 from .. import storage,statistics_engine
 
 def validate_reference(ref):

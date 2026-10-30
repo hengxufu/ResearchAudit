@@ -3,7 +3,7 @@ from pathlib import Path
 import polars as pl
 import yaml
 import os
-SKIP = {".git", ".venv", "node_modules", ".researchaudit", "dist", "__pycache__", ".pytest_cache", "test-results", "playwright-report"}
+SKIP = {".artifacts", ".git", ".venv", "node_modules", ".researchaudit", "dist", "__pycache__", ".pytest_cache", "test-results", "playwright-report"}
 def git(root, *args):
     try: return subprocess.check_output(["git","-C",str(root),*args],stderr=subprocess.DEVNULL,timeout=10).decode().strip()
     except Exception: return None

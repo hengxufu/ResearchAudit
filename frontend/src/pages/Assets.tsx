@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { api, post, Json, usePoll } from "./shared";
-import { TrackingPanel } from "../TrackingPanel";
+import { api, post, Json, usePoll } from "../shared/api";
+import { TrackingPanel } from "../components/TrackingPanel";
 export function Assets() {
   const [items, S] = useState<any[]>([]),
     [path, P] = useState(""),

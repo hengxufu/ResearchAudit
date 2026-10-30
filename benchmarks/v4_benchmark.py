@@ -6,9 +6,11 @@ import psutil
 from backend import storage
 from backend.v4 import projects,optimization
 
+from benchmarks.paths import temporary_root
+
 def main():
     previous=storage.DB;p=psutil.Process()
-    with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1],prefix='.test-runs-v4-benchmark-') as tmp:
+    with tempfile.TemporaryDirectory(dir=temporary_root(),prefix='.test-runs-v4-benchmark-') as tmp:
         root=Path(tmp)/'TEST_PROJECT';root.mkdir();storage.DB=Path(tmp)/'state'
         for i in range(1000):(root/f'log{i}.csv').write_text('loss\n1\n')
         with (root/'TEST_weights.pt').open('wb') as f:f.truncate(1024**3)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { api, post, Json, usePoll } from "./shared";
-import { TrackingPanel } from "../TrackingPanel";
+import { api, post, Json, usePoll } from "../shared/api";
+import { TrackingPanel } from "../components/TrackingPanel";
 export function Importer({ onDone }: { onDone: (id: number) => void }) {
   const [path, P] = useState(""),
     [job, J] = useState<any>(null),

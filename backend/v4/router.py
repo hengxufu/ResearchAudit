@@ -2,8 +2,8 @@ from typing import List,Dict,Literal,Optional
 from fastapi import APIRouter,Query
 from fastapi.responses import Response
 from pydantic import Field
-from ..v2.router import Strict,guard,executor,RunRef,MetricRef
-from ..v3 import documents
+from ..api.common import Strict,guard,executor,RunRef,MetricRef
+from ..core import documents
 from . import projects,environments,optimization,statistics,figures,copilot
 from . import science
 router=APIRouter(prefix='/api/v4',tags=['ResearchAudit 4'])

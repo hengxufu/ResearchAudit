@@ -1,5 +1,7 @@
 # ResearchAudit 4.0 development workbench
 
+Repository organization: [source layout, compatibility and generated-file conventions](docs/repository_structure.md). Documentation navigation: [docs index](docs/README.md). Run `.\scripts\check.ps1` for backend tests and frontend build; generated verification state is centralized under `.artifacts/`.
+
 Current incremental release: **4.0.0-dev.0**. See [v4 architecture and API](docs/v4_architecture_api.md), [v4 user guide](docs/v4_user_guide.md) and [v4 acceptance/remaining work](docs/v4_acceptance.md). Project Intelligence, historical-data optimization, registered bootstrap, multipanel recipes, environment comparisons and local allowlisted Copilot tools extend the existing platform. The sections below preserve the 3.0 foundation and its operational constraints.
 
 ResearchAudit is a local-first scientific experiment workbench. Its preserved 3.0 foundation provides explicit experiment replay, executable workflows, bounded scientific data browsing and versioned research knowledge. The current 4.0 development increment extends those functions without claiming every roadmap gate is complete. It runs real commands, imports real files and stores auditable results. It does not upload research data automatically.
@@ -79,7 +81,7 @@ $env:PW_BROWSER_CHANNEL="msedge"
 npm run test:e2e
 ```
 
-For Chromium instead, run `npx playwright install chromium` and omit PW_BROWSER_CHANNEL. E2E creates an isolated database, starts localhost, launches a controlled TEST DATA program and verifies navigation, execution, statistics, figures, audit, PDF download and ZIP integrity. On a restricted Windows sandbox, choose a fresh workspace `--basetemp .test-runs-<unique-name>` for pytest; test rename permissions can differ from user temp directories.
+For Chromium instead, run `npx playwright install chromium` and omit PW_BROWSER_CHANNEL. E2E creates an isolated database, starts localhost, launches a controlled TEST DATA program and verifies navigation, execution, statistics, figures, audit, PDF download and ZIP integrity. Pytest automatically selects a fresh workspace directory under `.artifacts/test-runs/`; browser data, traces and screenshots use `.artifacts/` too.
 
 Benchmarks: `benchmarks/v3_benchmark.py` and `docs/v3_benchmark_result.json`; the v2 benchmark is also retained. All benchmark/fixture data are explicitly TEST DATA. See docs/v3_acceptance.md for measured results and remaining limits.
 

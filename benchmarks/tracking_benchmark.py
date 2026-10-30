@@ -3,7 +3,8 @@ import tempfile,time,json,platform,sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from backend.tracking.engine import Engine
-with tempfile.TemporaryDirectory() as tmp:
+from benchmarks.paths import temporary_root
+with tempfile.TemporaryDirectory(dir=temporary_root()) as tmp:
     root=Path(tmp)/'TEST_DATA';root.mkdir();log=root/'metrics.jsonl'
     log.write_text(''.join(json.dumps({'metrics':{'loss':i/10000}})+'\n' for i in range(10000)))
     model=root/'model.pt'

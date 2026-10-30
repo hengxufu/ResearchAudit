@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api, post, Json } from "./shared";
+import { api, post, Json } from "../shared/api";
 export function ResearchIntelligence({
   snapshot,
   id,

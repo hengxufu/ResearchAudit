@@ -71,7 +71,7 @@ class Engine:
                 if not occupied:c.execute('UPDATE sources SET path=? WHERE id=?',(matches[0],source['id']))
     def scan(self):
         for project in self.projects():
-            root=Path(project['root']);seen=set();ignores=json.loads(project['ignores'])+['.git','.venv','node_modules','.researchaudit','__pycache__','.pytest_cache','.test-runs-*','test-results','playwright-report']
+            root=Path(project['root']);seen=set();ignores=json.loads(project['ignores'])+['.artifacts','.git','.venv','node_modules','.researchaudit','__pycache__','.pytest_cache','.test-runs-*','test-results','playwright-report']
             if not root.is_dir():continue
             paths=[]
             for directory,dirs,names in os.walk(root,followlinks=False):

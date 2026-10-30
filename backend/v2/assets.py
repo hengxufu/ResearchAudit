@@ -35,7 +35,7 @@ def capture(id,hash_content=False):
     if root.is_file():paths=[root]
     else:
         for directory,dirs,names in os.walk(root,followlinks=False):
-            dirs[:]=[d for d in dirs if d not in ('.git','.venv','node_modules','.researchaudit') and not (Path(directory)/d).is_symlink()]
+            dirs[:]=[d for d in dirs if d not in ('.artifacts','.git','.venv','node_modules','.researchaudit') and not (Path(directory)/d).is_symlink()]
             paths.extend(Path(directory)/n for n in names)
     manifest=[]
     for path in sorted(paths):
